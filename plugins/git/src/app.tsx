@@ -8,7 +8,7 @@ type Rpc = ReturnType<typeof useRpc<typeof rpcContract>>;
 const errorText = (error: unknown) => error instanceof Error ? error.message : String(error);
 const staged = (c: Change) => c.index !== " " && c.index !== "?";
 const unstaged = (c: Change) => c.worktree !== " " && c.worktree !== undefined;
-const statusText = (c: Change) => c.conflict ? "Конфликт" : c.index === "?" ? "Новый" : (c.index + c.worktree).includes("D") ? "Удалён" : c.original ? "Переименован" : (c.index + c.worktree).includes("A") ? "Добавлен" : "Изменён";
+const statusText = (c: Change) => c.conflict ? "Conflict" : c.index === "?" ? "New" : (c.index + c.worktree).includes("D") ? "Deleted" : c.original ? "Renamed" : (c.index + c.worktree).includes("A") ? "Added" : "Modified";
 const readSaved = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
 const save = (key: string, value: string) => { try { localStorage.setItem(key, value); } catch { /* optional preference */ } };
 
@@ -52,16 +52,16 @@ function GitPage({ threadId: panelThreadId }: { threadId?: string }) {
   return <div className="git-page">
     <div className="git-context">
       <Icon name="GitBranch" className="git-icon" /><strong>Git</strong>
-      <select aria-label="Проект" value={projectId} disabled={busy} onChange={(e) => setProjectId(e.target.value)}>
+      <select aria-label="Project" value={projectId} disabled={busy} onChange={(e) => setProjectId(e.target.value)}>
         {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
       </select>
       <select aria-label="Checkout" value={targetId} disabled={busy || !targets.length} onChange={(e) => { setTargetId(e.target.value); save(`bb-git-target:${projectId}`, e.target.value); }}>
         {targets.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
       </select>
     </div>
-    {error && <div className="git-error" role="alert">{error} <button onClick={() => setRevision((v) => v + 1)}>Повторить</button></div>}
+    {error && <div className="git-error" role="alert">{error} <button onClick={() => setRevision((v) => v + 1)}>Retry</button></div>}
     {target ? <Repository key={`${projectId}:${target.id}`} rpc={rpc} target={target} onBusy={setBusy} />
-      : <div className="git-empty" role="status">{loading ? "Загрузка checkout…" : projects.length ? "У проекта нет доступного Git checkout. Добавьте путь к репозиторию в настройках проекта." : "Добавьте Git-проект в BB, чтобы начать."}</div>}
+      : <div className="git-empty" role="status">{loading ? "Loading checkout…" : projects.length ? "This project has no available Git checkout. Add a repository path in project settings." : "Add a Git project to BB to get started."}</div>}
   </div>;
 }
 
@@ -130,8 +130,8 @@ function Repository({ rpc, target, onBusy }: { rpc: Rpc; target: Target; onBusy:
       } catch (e) {
         if (current) {
           setError(errorText(e));
-          if (errorText(e).includes("Операция не найдена")) {
-            setJob({ ...job, state: "failed", prompt: null, output: "Связь с операцией потеряна. Проверьте состояние Git перед повтором." });
+          if (errorText(e).includes("Operation not found")) {
+            setJob({ ...job, state: "failed", prompt: null, output: "Connection to the operation was lost. Check Git status before trying again." });
             await refresh();
             return;
           }
@@ -166,7 +166,7 @@ function Repository({ rpc, target, onBusy }: { rpc: Rpc; target: Target; onBusy:
   }
   const toggle = (key: string) => setSelected((previous) => { const next = new Set(previous); if (next.has(key)) next.delete(key); else next.add(key); return next; });
   const showFile = (path: string, isStaged: boolean) => { setFile({ path, staged: isStaged }); setTab("diff"); };
-  if (!data) return <div className="git-empty" role="status">{error ? <><p className="git-error" role="alert">{error}</p><button onClick={() => { setError(""); void refresh(); }}>Повторить</button></> : "Читаю состояние Git…"}</div>;
+  if (!data) return <div className="git-empty" role="status">{error ? <><p className="git-error" role="alert">{error}</p><button onClick={() => { setError(""); void refresh(); }}>Retry</button></> : "Loading Git status…"}</div>;
   const index = data.changes.filter((c) => staged(c) && !c.conflict);
   const working = data.changes.filter((c) => unstaged(c) && !c.conflict);
   const conflicts = data.changes.filter((c) => c.conflict);
@@ -179,63 +179,63 @@ function Repository({ rpc, target, onBusy }: { rpc: Rpc; target: Target; onBusy:
           const next = new Set(previous), all = changes.every((c) => next.has(key + c.path));
           for (const c of changes) { if (all) next.delete(key + c.path); else next.add(key + c.path); }
           return next;
-        })}>{changes.length && paths.length === changes.length ? "Снять выбор" : "Выбрать все"}</button>
+        })}>{changes.length && paths.length === changes.length ? "Deselect all" : "Select all"}</button>
       </div>
       {changes.length ? <ul>{changes.map((c) => <li key={c.path} data-selected={file?.path === c.path && file.staged === isStaged}>
-        <input type="checkbox" aria-label={`Выбрать ${c.path} (${title})`} checked={selected.has(key + c.path)} disabled={busy} onChange={() => toggle(key + c.path)} />
+        <input type="checkbox" aria-label={`Select ${c.path} (${title})`} checked={selected.has(key + c.path)} disabled={busy} onChange={() => toggle(key + c.path)} />
         <button className="git-file" onClick={() => showFile(c.path, isStaged)} title={c.original ? `${c.original} → ${c.path}` : c.path}>
           <span className="git-file-status" title={statusText(c)}>{c.index === "?" ? "?" : isStaged ? c.index : c.worktree}</span><span>{c.path}</span>
         </button>
-      </li>)}</ul> : <p className="git-muted">{isStaged ? "Добавьте файлы в stage для коммита." : "Рабочая директория чистая."}</p>}
+      </li>)}</ul> : <p className="git-muted">{isStaged ? "Stage files to include them in the commit." : "Working directory is clean."}</p>}
       {!!changes.length && <button className="git-stage" disabled={busy || !paths.length} onClick={() => void start({ kind: isStaged ? "unstage" : "stage", paths })}>
-        {isStaged ? "Убрать из stage" : "Добавить в stage"}{paths.length ? ` · ${paths.length}` : ""}
+        {isStaged ? "Unstage" : "Stage"}{paths.length ? ` · ${paths.length}` : ""}
       </button>}
     </section>;
   };
   return <>
     <div className="git-toolbar">
       <span className="git-current-branch"><Icon name="GitBranch" className="git-icon" /><strong>{data.branch}</strong></span>
-      <span className="git-tracking" title={data.upstream || "Нет upstream"}>{data.upstream || "Без upstream"}{data.upstream ? ` · ↑${data.ahead} ↓${data.behind}` : ""}</span>
-      <select aria-label="Remote для Fetch и Push" value={remote} disabled={busy || !data.remotes.length} onChange={(e) => setRemote(e.target.value)}>{data.remotes.map((r) => <option key={r.name}>{r.name}</option>)}</select>
-      <button className="git-icon-button" aria-label="Fetch" title="Fetch — получить изменения с сервера" disabled={busy || !remote} onClick={() => void start({ kind: "fetch", remote })}><Glyph name="fetch" /></button>
-      <button className="git-icon-button" aria-label="Pull" disabled={busy || !data.upstream} title="Pull — обновить текущую ветку (fast-forward)" onClick={() => void start({ kind: "pull" })}><Glyph name="pull" /></button>
-      <button className="git-icon-button" aria-label="Push" title="Push — отправить текущую ветку" disabled={busy || !remote || data.unborn} onClick={() => void start({ kind: "push", remote })}><Glyph name="push" /></button>
-      <button className="git-icon-button" aria-label="Обновить состояние Git" title="Обновить состояние Git" onClick={() => { setError(""); void refresh(); }}><Glyph name="refresh" /></button>
+      <span className="git-tracking" title={data.upstream || "No upstream"}>{data.upstream || "No upstream"}{data.upstream ? ` · ↑${data.ahead} ↓${data.behind}` : ""}</span>
+      <select aria-label="Remote for Fetch and Push" value={remote} disabled={busy || !data.remotes.length} onChange={(e) => setRemote(e.target.value)}>{data.remotes.map((r) => <option key={r.name}>{r.name}</option>)}</select>
+      <button className="git-icon-button" aria-label="Fetch" title="Fetch — get changes from remote" disabled={busy || !remote} onClick={() => void start({ kind: "fetch", remote })}><Glyph name="fetch" /></button>
+      <button className="git-icon-button" aria-label="Pull" disabled={busy || !data.upstream} title="Pull — update current branch (fast-forward)" onClick={() => void start({ kind: "pull" })}><Glyph name="pull" /></button>
+      <button className="git-icon-button" aria-label="Push" title="Push — push current branch" disabled={busy || !remote || data.unborn} onClick={() => void start({ kind: "push", remote })}><Glyph name="push" /></button>
+      <button className="git-icon-button" aria-label="Refresh Git status" title="Refresh Git status" onClick={() => { setError(""); void refresh(); }}><Glyph name="refresh" /></button>
       <span className="git-toolbar-divider" aria-hidden="true" />
-      <button className="git-icon-button git-settings-button" aria-label="Аккаунт и SSH" title="Аккаунт и SSH" aria-pressed={tab === "account"} onClick={() => setTab((current) => current === "account" ? "history" : "account")}><Glyph name="settings" /></button>
+      <button className="git-icon-button git-settings-button" aria-label="Account and SSH" title="Account and SSH" aria-pressed={tab === "account"} onClick={() => setTab((current) => current === "account" ? "history" : "account")}><Glyph name="settings" /></button>
     </div>
-    {error && <p role="alert" className="git-error">{error}<button aria-label="Скрыть ошибку" onClick={() => setError("")}>Закрыть</button></p>}
-        <div className="git-tabs" role="tablist" aria-label="Git панели">{(["history", "diff"] as const).map((id, i, tabs) => <button key={id} id={`${panelId}-${id}`} role="tab" tabIndex={tab === id || tab === "account" && id === "history" ? 0 : -1} aria-selected={tab === id} onClick={() => setTab(id)} onKeyDown={(e) => {
+    {error && <p role="alert" className="git-error">{error}<button aria-label="Dismiss error" onClick={() => setError("")}>Close</button></p>}
+        <div className="git-tabs" role="tablist" aria-label="Git views">{(["history", "diff"] as const).map((id, i, tabs) => <button key={id} id={`${panelId}-${id}`} role="tab" tabIndex={tab === id || tab === "account" && id === "history" ? 0 : -1} aria-selected={tab === id} onClick={() => setTab(id)} onKeyDown={(e) => {
           const next = e.key === "ArrowRight" ? (i + 1) % tabs.length : e.key === "ArrowLeft" ? (i + tabs.length - 1) % tabs.length : e.key === "Home" ? 0 : e.key === "End" ? tabs.length - 1 : null;
           if (next === null) return;
           e.preventDefault(); setTab(tabs[next]); (e.currentTarget.parentElement?.children[next] as HTMLElement | undefined)?.focus();
-        }}>{id === "diff" ? `Изменения · ${data.changes.length}` : "Журнал"}</button>)}</div>
-    {data.merging && <div className="git-merge-banner"><strong>Merge не завершён</strong><span>{conflicts.length ? `Конфликты: ${conflicts.length}. Исправьте файлы и добавьте в stage.` : "Конфликты разрешены. Завершите merge."}</span><button onClick={() => setTab("diff")}>Открыть изменения</button><button disabled={busy || !!conflicts.length} onClick={() => void start({ kind: "merge-continue" })}>Завершить merge</button><button disabled={busy} onClick={() => void start({ kind: "merge-abort" })}>Отменить merge</button></div>}
+        }}>{id === "diff" ? `Changes · ${data.changes.length}` : "Log"}</button>)}</div>
+    {data.merging && <div className="git-merge-banner"><strong>Merge in progress</strong><span>{conflicts.length ? `Conflicts: ${conflicts.length}. Resolve the files and stage them.` : "Conflicts resolved. Complete the merge."}</span><button onClick={() => setTab("diff")}>Open Changes</button><button disabled={busy || !!conflicts.length} onClick={() => void start({ kind: "merge-continue" })}>Complete merge</button><button disabled={busy} onClick={() => void start({ kind: "merge-abort" })}>Abort merge</button></div>}
     <div className="git-log-tab" hidden={tab !== "history"}><GitLog rpc={rpc} target={target} data={data} busy={busy} start={start} /></div>
     {tab === "account" && <div className="git-account-scroll"><Account key={JSON.stringify(data.config) + JSON.stringify(data.remotes)} data={data} busy={busy} start={start} /></div>}
     <div className="git-workspace" hidden={tab !== "diff"}>
 
       <aside className="git-changes">
         <div className="git-file-lists">
-          {!!conflicts.length && <section className="git-conflicts"><strong>Нужно разрешить конфликты · {conflicts.length}</strong><p>Исправьте файлы, затем добавьте их в stage.</p>{conflicts.map((c) => <div key={c.path}><button className="git-file" onClick={() => showFile(c.path, false)}>{c.path}</button><button disabled={busy} onClick={() => void start({ kind: "stage", paths: [c.path] })}>В stage</button></div>)}</section>}
-          {group("Изменения", working, false)}{group("Stage", index, true)}
+          {!!conflicts.length && <section className="git-conflicts"><strong>Resolve conflicts · {conflicts.length}</strong><p>Resolve the files, then stage them.</p>{conflicts.map((c) => <div key={c.path}><button className="git-file" onClick={() => showFile(c.path, false)}>{c.path}</button><button disabled={busy} onClick={() => void start({ kind: "stage", paths: [c.path] })}>Stage</button></div>)}</section>}
+          {group("Changes", working, false)}{group("Stage", index, true)}
         </div>
         <form className="git-commit" onSubmit={(e) => { e.preventDefault(); void start({ kind: "commit", message }); }}>
-          <label htmlFor={messageId}>Сообщение коммита</label>
-          <textarea id={messageId} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Что изменилось и почему?" disabled={busy} rows={4} maxLength={65536} />
-          <div className="git-commit-footer"><button type="button" className="git-identity" onClick={() => setTab("account")} title={`${data.config.name} <${data.config.email}>`}>{data.config.name || "Настроить автора"}</button><button className="git-primary" disabled={busy || !message.trim() || !index.length || !!conflicts.length}>Commit · {index.length}</button></div>
+          <label htmlFor={messageId}>Commit message</label>
+          <textarea id={messageId} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="What changed and why?" disabled={busy} rows={4} maxLength={65536} />
+          <div className="git-commit-footer"><button type="button" className="git-identity" onClick={() => setTab("account")} title={`${data.config.name} <${data.config.email}>`}>{data.config.name || "Set up author"}</button><button className="git-primary" disabled={busy || !message.trim() || !index.length || !!conflicts.length}>Commit · {index.length}</button></div>
         </form>
       </aside>
       <main className="git-inspector">
         <div className="git-inspector-content">
-          {tab === "diff" && (file ? <><div className="git-diff-heading"><span title={file.path}>{file.path} <small>{file.staged ? "stage" : "рабочая копия"}</small></span><button aria-pressed={diffView === "split"} onClick={() => setDiffView((v) => v === "split" ? "unified" : "split")}>{diffView === "split" ? "Рядом" : "В строку"}</button></div>
-            {diffError ? <p className="git-error" role="alert">{diffError}</p> : patch === null ? <p className="git-empty">Загрузка diff…</p> : patch ? <Diff patch={patch} path={file.path} view={diffView} /> : <p className="git-empty">Нет текстовых изменений.</p>}
-          </> : <div className="git-empty"><Icon name="FileDiff" className="git-empty-icon" /><p>Выберите файл, чтобы посмотреть изменения.</p></div>)}
+          {tab === "diff" && (file ? <><div className="git-diff-heading"><span title={file.path}>{file.path} <small>{file.staged ? "stage" : "working tree"}</small></span><button aria-pressed={diffView === "split"} onClick={() => setDiffView((v) => v === "split" ? "unified" : "split")}>{diffView === "split" ? "Side by side" : "Unified"}</button></div>
+            {diffError ? <p className="git-error" role="alert">{diffError}</p> : patch === null ? <p className="git-empty">Loading diff…</p> : patch ? <Diff patch={patch} path={file.path} view={diffView} /> : <p className="git-empty">No text changes.</p>}
+          </> : <div className="git-empty"><Icon name="FileDiff" className="git-empty-icon" /><p>Select a file to view its changes.</p></div>)}
 
         </div>
       </main>
     </div>
-    {job && <div className="git-operation" aria-live="polite"><div><strong>{job.state === "running" ? `${job.kind}: ${job.prompt ? "ожидает ввода" : "выполняется…"}` : job.state === "done" ? `${job.kind}: готово` : job.state === "cancelled" ? "Операция отменена" : `${job.kind}: ошибка`}</strong>{job.state === "running" ? <button onClick={() => void cancel()}>Отменить</button> : <button onClick={() => setJob(null)}>Закрыть</button>}</div>{job.output && <pre>{job.output}</pre>}</div>}
+    {job && <div className="git-operation" aria-live="polite"><div><strong>{job.state === "running" ? `${job.kind}: ${job.prompt ? "waiting for input" : "running…"}` : job.state === "done" ? `${job.kind}: done` : job.state === "cancelled" ? "Operation cancelled" : `${job.kind}: failed`}</strong>{job.state === "running" ? <button onClick={() => void cancel()}>Cancel</button> : <button onClick={() => setJob(null)}>Close</button>}</div>{job.output && <pre>{job.output}</pre>}</div>}
     {job?.prompt && <Credential key={job.prompt.id} job={job} answer={async (value) => { await rpc.call("answer", { ...input, jobId: job.id, promptId: job.prompt!.id, value }); }} cancel={cancel} />}
   </>;
 }
@@ -245,25 +245,25 @@ function Account({ data, busy, start }: { data: Snapshot; busy: boolean; start: 
   const [remote, setRemote] = useState(data.remotes[0]?.name ?? ""), [url, setUrl] = useState(data.remotes[0]?.url ?? "");
   const id = useId();
   return <div className="git-account">
-    <h2>Аккаунт этого проекта</h2><p className="git-muted">Настройки сохраняются в Git-конфиге этого репозитория и действуют для его worktree. Пустое поле наследует системные настройки.</p>
+    <h2>Project account</h2><p className="git-muted">Settings are saved in this repository’s Git config and apply to its worktrees. Empty fields inherit system settings.</p>
     <form onSubmit={(e) => { e.preventDefault(); void start({ kind: "account", name, email, sshCommand }); }}>
       <fieldset disabled={busy}>
-        <label htmlFor={`${id}-name`}>Имя автора</label><input id={`${id}-name`} value={name} onChange={(e) => setName(e.target.value)} placeholder={data.config.name || "user.name"} maxLength={4096} />
-        <label htmlFor={`${id}-email`}>Email автора</label><input id={`${id}-email`} value={email} onChange={(e) => setEmail(e.target.value)} placeholder={data.config.email || "user.email"} maxLength={4096} />
-        <label htmlFor={`${id}-ssh`}>SSH-команда <span className="git-muted">необязательно</span></label><input id={`${id}-ssh`} value={sshCommand} onChange={(e) => setSshCommand(e.target.value)} placeholder={data.config.sshCommand || "Системный ssh и ~/.ssh/config"} maxLength={4096} />
-        <p className="git-muted">Для отдельного ключа: <code>ssh -i ~/.ssh/id_work -o IdentitiesOnly=yes</code>. Для SSH-алиаса оставьте поле пустым и укажите алиас в remote URL.</p>
-        <button className="git-primary">Сохранить аккаунт</button>
+        <label htmlFor={`${id}-name`}>Author name</label><input id={`${id}-name`} value={name} onChange={(e) => setName(e.target.value)} placeholder={data.config.name || "user.name"} maxLength={4096} />
+        <label htmlFor={`${id}-email`}>Author email</label><input id={`${id}-email`} value={email} onChange={(e) => setEmail(e.target.value)} placeholder={data.config.email || "user.email"} maxLength={4096} />
+        <label htmlFor={`${id}-ssh`}>SSH command <span className="git-muted">optional</span></label><input id={`${id}-ssh`} value={sshCommand} onChange={(e) => setSshCommand(e.target.value)} placeholder={data.config.sshCommand || "System SSH and ~/.ssh/config"} maxLength={4096} />
+        <p className="git-muted">For a specific key: <code>ssh -i ~/.ssh/id_work -o IdentitiesOnly=yes</code>. To use an SSH alias, leave this field empty and use the alias in the remote URL.</p>
+        <button className="git-primary">Save account</button>
       </fieldset>
     </form>
     <h2>Remote</h2>
     {data.remotes.length ? <form onSubmit={(e) => { e.preventDefault(); void start({ kind: "remote", remote, url }); }}><fieldset disabled={busy}>
       <label htmlFor={`${id}-remote`}>Remote</label><select id={`${id}-remote`} value={remote} onChange={(e) => { setRemote(e.target.value); setUrl(data.remotes.find((r) => r.name === e.target.value)?.url ?? ""); }}>{data.remotes.map((r) => <option key={r.name}>{r.name}</option>)}</select>
       <label htmlFor={`${id}-url`}>URL</label><input id={`${id}-url`} value={url} onChange={(e) => setUrl(e.target.value)} placeholder="git@github-work:team/repo.git" maxLength={4096} />
-      {data.remotes.find((r) => r.name === remote)?.pushUrl !== data.remotes.find((r) => r.name === remote)?.url && <p className="git-muted">Отдельный push URL: <code>{data.remotes.find((r) => r.name === remote)?.pushUrl}</code>. Измените его через <code>git remote set-url --push</code>.</p>}
-      {/^https?:/i.test(data.remotes.find((r) => r.name === remote)?.pushUrl || "") && <p className="git-muted">Push использует HTTPS: SSH-команда и SSH-ключ здесь не применяются. Для SSH укажите URL вида <code>git@github.com:owner/repo.git</code> или ваш SSH-алиас.</p>}
-      <button disabled={!url.trim()}>Сохранить URL</button>
-    </fieldset></form> : <p className="git-muted">Remote пока нет. Добавьте его командой <code>git remote add origin &lt;url&gt;</code>.</p>}
-    <p className="git-muted">Git и SSH запускаются на машине checkout. Используются её SSH-config, known_hosts, ssh-agent и credential helpers. Пароль и passphrase вводятся при запросе и плагином не сохраняются.</p>
+      {data.remotes.find((r) => r.name === remote)?.pushUrl !== data.remotes.find((r) => r.name === remote)?.url && <p className="git-muted">Separate push URL: <code>{data.remotes.find((r) => r.name === remote)?.pushUrl}</code>. Change it using <code>git remote set-url --push</code>.</p>}
+      {/^https?:/i.test(data.remotes.find((r) => r.name === remote)?.pushUrl || "") && <p className="git-muted">Push uses HTTPS, so the SSH command and key do not apply. To use SSH, enter a URL such as <code>git@github.com:owner/repo.git</code> or your SSH alias.</p>}
+      <button disabled={!url.trim()}>Save URL</button>
+    </fieldset></form> : <p className="git-muted">No remotes yet. Add one using <code>git remote add origin &lt;url&gt;</code>.</p>}
+    <p className="git-muted">Git and SSH run on the checkout’s host, using its SSH config, known_hosts, ssh-agent and credential helpers. Passwords and passphrases are entered on request and are not stored by the plugin.</p>
   </div>;
 }
 
@@ -277,12 +277,12 @@ function Credential({ job, answer, cancel }: { job: Job; answer: (value: string)
     try { await answer(value); setValue(""); } catch (e) { setError(errorText(e)); setPending(false); }
   }
   return <dialog ref={dialog} className="git-credential" aria-labelledby={`${id}-title`} onCancel={(e) => { e.preventDefault(); void cancel(); }}>
-    <form onSubmit={(e) => void submit(e)}><h2 id={`${id}-title`}>{prompt.confirm ? "Подтверждение SSH" : prompt.secret ? "Git / SSH: пароль" : "Git: имя пользователя"}</h2>
+    <form onSubmit={(e) => void submit(e)}><h2 id={`${id}-title`}>{prompt.confirm ? "SSH confirmation" : prompt.secret ? "Git / SSH: password" : "Git: username"}</h2>
       <p className="git-prompt">{prompt.text}</p>
-      <label htmlFor={`${id}-input`}>{prompt.confirm ? "Ответ: yes / no или fingerprint" : prompt.secret ? "Пароль или passphrase" : "Ответ"}</label>
+      <label htmlFor={`${id}-input`}>{prompt.confirm ? "Answer: yes / no or fingerprint" : prompt.secret ? "Password or passphrase" : "Answer"}</label>
       <input id={`${id}-input`} autoFocus autoComplete="off" type={prompt.secret ? "password" : "text"} value={value} onChange={(e) => setValue(e.target.value)} disabled={pending} maxLength={8192} />
       {error && <p role="alert" className="git-error">{error}</p>}
-      <div className="git-credential-actions"><button type="button" onClick={() => { setValue(""); void cancel(); }}>Отменить операцию</button><button className="git-primary" disabled={pending || !value}>Продолжить</button></div>
+      <div className="git-credential-actions"><button type="button" onClick={() => { setValue(""); void cancel(); }}>Cancel operation</button><button className="git-primary" disabled={pending || !value}>Continue</button></div>
     </form>
   </dialog>;
 }

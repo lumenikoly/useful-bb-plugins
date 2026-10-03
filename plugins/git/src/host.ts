@@ -11,7 +11,7 @@ const locks = new Map<string, string>();
 
 async function findJob(path: string, jobId: string, signal: AbortSignal) {
   const job = jobs.get(jobId);
-  if (!job || job.root !== await repository(path, signal)) throw new Error("Операция не найдена. Возможно, плагин был перезагружен; обновите состояние Git.");
+  if (!job || job.root !== await repository(path, signal)) throw new Error("Operation not found. The plugin may have been reloaded; refresh Git status.");
   return job;
 }
 
@@ -32,7 +32,7 @@ export default experimental_defineHostEntry({
       const root = await repository(path, context.signal);
       const common = (await git(root, ["rev-parse", "--git-common-dir"], { signal: context.signal })).stdout.replace(/\r?\n$/, "");
       const lock = resolve(root, common);
-      if (locks.has(lock)) throw new Error("В этом репозитории уже выполняется Git-команда. Дождитесь её завершения.");
+      if (locks.has(lock)) throw new Error("A Git command is already running in this repository. Wait for it to finish.");
       // ponytail: in-memory jobs, recovered from Git status after worker restart.
       for (const [id, job] of jobs) if (job.finished && Date.now() - job.finished > 300_000) jobs.delete(id);
       const id = randomUUID(), abort = new AbortController();
@@ -60,7 +60,7 @@ export default experimental_defineHostEntry({
             onOutput: (s) => { view.output = (view.output + s).slice(-262144); },
           });
           view.state = "done";
-          if (!view.output) view.output = "Готово.";
+          if (!view.output) view.output = "Done.";
         } catch (error) {
           view.state = abort.signal.aborted ? "cancelled" : "failed";
           view.output = (view.output + "\n" + (error instanceof Error ? error.message : String(error))).slice(-262144);
@@ -83,7 +83,7 @@ export default experimental_defineHostEntry({
     job: async ({ path, jobId }, { signal }) => ({ ...(await findJob(path, jobId, signal)).view }),
     answer: async ({ path, jobId, promptId, value }, { signal }) => {
       const job = await findJob(path, jobId, signal);
-      if (job.view.prompt?.id !== promptId || !job.reply) throw new Error("Запрос пароля уже завершён. Обновите панель.");
+      if (job.view.prompt?.id !== promptId || !job.reply) throw new Error("The credential request has already ended. Refresh the panel.");
       job.reply(value);
       return null;
     },

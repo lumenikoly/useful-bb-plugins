@@ -21,7 +21,7 @@ function useThemes() {
       setThemes(result.themes);
       setError(null);
     } catch {
-      if (request === revision.current) setError("Не удалось загрузить цвета. Повторите попытку.");
+      if (request === revision.current) setError("Could not load colors. Please try again.");
     }
   }, [rpc]);
   useEffect(() => { void refetch(); return () => { revision.current++; }; }, [refetch]);
@@ -76,43 +76,43 @@ function ThemeEditor({ projectId, initialTheme, configured, rpc, refetch }: {
         setDraft(defaultTheme(projectId));
       } else await rpc.call("save", { projectId, theme: draft });
       await refetch();
-      setMessage(reset ? "Цвета проекта сброшены." : "Цвета сохранены.");
+      setMessage(reset ? "Project colors reset." : "Colors saved.");
     } catch {
-      setError("Не удалось сохранить цвета. Изменения остались в форме — попробуйте ещё раз.");
+      setError("Could not save colors. Your changes are still here; please try again.");
     } finally { setPending(false); }
   }
   return <>
     <fieldset className="pt-editor" disabled={pending}>
-      <legend className="pt-sr-only">Цвета элементов</legend>
+      <legend className="pt-sr-only">Element colors</legend>
       <div className="pt-project-color">
-        <span className="pt-label">Цвет проекта</span>
-        <div className="pt-colors" role="group" aria-label="Цвет проекта">
+        <span className="pt-label">Project color</span>
+        <div className="pt-colors" role="group" aria-label="Project color">
           <div className="pt-swatches">
-            {PALETTE.map(({ name, color }) => <button type="button" className="pt-swatch" style={{ "--pt-swatch": color } as CSSProperties} key={color} aria-label={`Цвет проекта: ${name}`} aria-pressed={draft.color === color} title={name} onClick={() => change({ color })} />)}
+            {PALETTE.map(({ name, color }) => <button type="button" className="pt-swatch" style={{ "--pt-swatch": color } as CSSProperties} key={color} aria-label={`Project color: ${name}`} aria-pressed={draft.color === color} title={name} onClick={() => change({ color })} />)}
           </div>
           <label className="pt-custom">
-            <input type="color" value={draft.color} aria-label="Свой цвет проекта" onChange={(event) => change({ color: event.target.value })} />
-            <span>Свой цвет</span><span className="pt-hex">{draft.color.toUpperCase()}</span>
+            <input type="color" value={draft.color} aria-label="Custom project color" onChange={(event) => change({ color: event.target.value })} />
+            <span>Custom color</span><span className="pt-hex">{draft.color.toUpperCase()}</span>
           </label>
         </div>
       </div>
       {SURFACES.map(({ id: surfaceId, title, description }) => <div className="pt-surface" key={surfaceId}>
         <div className="pt-surface-heading">
           <div><label className="pt-label" htmlFor={`${id}-${surfaceId}`}>{title}</label><p className="pt-hint">{description}</p></div>
-          <input id={`${id}-${surfaceId}`} className="pt-toggle" type="checkbox" role="switch" checked={draft[surfaceId]} onChange={(event) => change({ [surfaceId]: event.target.checked })} aria-label={`Окрашивать: ${title}`} />
+          <input id={`${id}-${surfaceId}`} className="pt-toggle" type="checkbox" role="switch" checked={draft[surfaceId]} onChange={(event) => change({ [surfaceId]: event.target.checked })} aria-label={`Tint: ${title}`} />
         </div>
       </div>)}
     </fieldset>
-    <div className="pt-preview" aria-label="Предпросмотр цветов" style={{
+    <div className="pt-preview" aria-label="Color preview" style={{
       background: draft.background ? tint(draft.color, "var(--canvas)", 7) : "var(--background)",
     }}>
-      <div className="pt-preview-sidebar"><span className="pt-preview-label">Треды</span><div className="pt-preview-thread" style={{ background: draft.threads ? tint(draft.color, "var(--sidebar)", 20) : "var(--sidebar-accent)" }}>Ваш проект</div></div>
-      <div className="pt-preview-main"><span className="pt-preview-tab" style={{ background: draft.browser ? tint(draft.color, "var(--sidebar)", 22) : "var(--sidebar)" }}><span className="pt-preview-dot" style={{ background: draft.browser ? draft.color : "var(--muted-foreground)" }} />Browser</span><span className="pt-preview-label">Предпросмотр</span></div>
+      <div className="pt-preview-sidebar"><span className="pt-preview-label">Threads</span><div className="pt-preview-thread" style={{ background: draft.threads ? tint(draft.color, "var(--sidebar)", 20) : "var(--sidebar-accent)" }}>Your project</div></div>
+      <div className="pt-preview-main"><span className="pt-preview-tab" style={{ background: draft.browser ? tint(draft.color, "var(--sidebar)", 22) : "var(--sidebar)" }}><span className="pt-preview-dot" style={{ background: draft.browser ? draft.color : "var(--muted-foreground)" }} />Browser</span><span className="pt-preview-label">Preview</span></div>
     </div>
     <div className="pt-footer">
-      <button type="button" className="pt-button pt-save" disabled={pending || !dirty} onClick={() => void persist()}>{pending ? "Сохранение…" : "Сохранить"}</button>
-      <button type="button" className="pt-button pt-reset" disabled={pending || (!configured && !dirty)} onClick={() => void persist(true)}>Сбросить</button>
-      <span className="pt-hint" role="status">{dirty ? "Есть несохранённые изменения" : message || "Изменения применяются после сохранения"}</span>
+      <button type="button" className="pt-button pt-save" disabled={pending || !dirty} onClick={() => void persist()}>{pending ? "Saving…" : "Save"}</button>
+      <button type="button" className="pt-button pt-reset" disabled={pending || (!configured && !dirty)} onClick={() => void persist(true)}>Reset</button>
+      <span className="pt-hint" role="status">{dirty ? "Unsaved changes" : message || "Changes apply after saving"}</span>
     </div>
     {error && <p className="pt-error" role="alert">{error}</p>}
   </>;
@@ -126,18 +126,18 @@ function ThemeSettings() {
   const projectId = projects.some((project) => project.id === selection) ? selection : projects.some((project) => project.id === context.projectId) ? context.projectId : projects[0]?.id;
   const id = useId();
   return <section className="pt-settings">
-    <p className="pt-intro">У каждого проекта — свой мягкий акцент. Выберите, какие элементы окрашивать.</p>
-    {error || status === "error" ? <div className="pt-error" role="alert">{error || "Не удалось загрузить проекты."} <button className="pt-link" onClick={() => { if (status === "error") window.location.reload(); else void refetch(); }}>Повторить</button></div> : null}
-    {themes === null || status === "loading" ? <p className="pt-hint" role="status">Загрузка проектов и цветов…</p> : projects.length === 0 ? <p className="pt-hint">Создайте проект в bb, чтобы настроить его цвета.</p> : <>
-      <label className="pt-label" htmlFor={id}>Проект</label>
-      <select id={id} className="pt-select" value={projectId ?? ""} onChange={(event) => setSelection(event.target.value)}>{projects.map((project) => <option value={project.id} key={project.id}>{project.isPersonal ? "Личные треды" : project.name}</option>)}</select>
+    <p className="pt-intro">Give each project a subtle accent. Choose which elements to tint.</p>
+    {error || status === "error" ? <div className="pt-error" role="alert">{error || "Could not load projects."} <button className="pt-link" onClick={() => { if (status === "error") window.location.reload(); else void refetch(); }}>Try again</button></div> : null}
+    {themes === null || status === "loading" ? <p className="pt-hint" role="status">Loading projects and colors…</p> : projects.length === 0 ? <p className="pt-hint">Create a project in bb to customize its colors.</p> : <>
+      <label className="pt-label" htmlFor={id}>Project</label>
+      <select id={id} className="pt-select" value={projectId ?? ""} onChange={(event) => setSelection(event.target.value)}>{projects.map((project) => <option value={project.id} key={project.id}>{project.isPersonal ? "Personal threads" : project.name}</option>)}</select>
       {projectId && <ThemeEditor key={projectId} projectId={projectId} initialTheme={themes[projectId] ?? defaultTheme(projectId)} configured={!!themes[projectId]} rpc={rpc} refetch={refetch} />}
     </>}
   </section>;
 }
 
 export default definePluginApp((app) => {
-  app.slots.settingsSection({ id: "project-colors", title: "Цвета проектов", component: ThemeSettings });
+  app.slots.settingsSection({ id: "project-colors", title: "Project colors", component: ThemeSettings });
   app.slots.experimental_appOverlay({ id: "appearance-sync", component: AppearanceSync });
   app.contentScripts.register({ id: "project-appearance", mount: ({ signal }) => mountAppearance(signal) });
 });

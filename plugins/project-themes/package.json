@@ -9,7 +9,7 @@
   },
   "bb": {
     "name": "Project Themes",
-    "description": "Мягкие цвета для каждого проекта: треды, вкладка браузера и фон с независимыми переключателями.",
+    "description": "Subtle project colors for thread rows, browser tabs and the background, with independent toggles.",
     "branding": {
       "icon": "Palette"
     },
@@ -62,7 +62,7 @@
     "directory": "plugins/project-themes"
   },
   "homepage": "https://github.com/lumenikoly/useful-bb-plugins/tree/main/plugins/project-themes#readme",
-  "description": "Мягкие цвета для каждого проекта: треды, вкладка браузера и фон с независимыми переключателями.",
+  "description": "Subtle project colors for thread rows, browser tabs and the background, with independent toggles.",
   "bugs": {
     "url": "https://github.com/lumenikoly/useful-bb-plugins/issues"
   }

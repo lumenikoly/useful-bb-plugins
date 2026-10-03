@@ -123,8 +123,8 @@ test("askpass: real OpenSSH encrypted key, UI job prompt, wrong reply ID and can
     const job = await harness.experimental_call("start", { path: repo, action: { kind: "push", remote: "origin" } });
     const waiting = await until(harness, repo, job, (j) => j.prompt !== null);
     assert.equal(waiting.prompt?.secret, true);
-    await assert.rejects(harness.experimental_call("start", { path: repo, action: { kind: "fetch", remote: "origin" } }), /уже выполняется/);
-    await assert.rejects(harness.experimental_call("answer", { path: repo, jobId: job.id, promptId: "00000000-0000-4000-8000-000000000000", value: fixture }), /уже завершён/);
+    await assert.rejects(harness.experimental_call("start", { path: repo, action: { kind: "fetch", remote: "origin" } }), /already running/);
+    await assert.rejects(harness.experimental_call("answer", { path: repo, jobId: job.id, promptId: "00000000-0000-4000-8000-000000000000", value: fixture }), /already ended/);
     await harness.experimental_call("answer", { path: repo, jobId: job.id, promptId: waiting.prompt!.id, value: fixture });
     const finished = await until(harness, repo, job, (j) => j.state !== "running");
     assert.equal(finished.state, "done", finished.output);

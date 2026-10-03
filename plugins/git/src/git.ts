@@ -23,13 +23,13 @@ export async function git(path: string, args: string[], options: {
       killTimer = setTimeout(() => kill("SIGKILL"), 1500);
       killTimer.unref();
     };
-    const abort = () => stop(new Error("Операция отменена."));
+    const abort = () => stop(new Error("Operation cancelled."));
     options.signal?.addEventListener("abort", abort, { once: true });
     if (options.signal?.aborted) abort();
-    const timeout = setTimeout(() => stop(new Error("Git не завершился за 10 минут.")), 600_000);
+    const timeout = setTimeout(() => stop(new Error("Git did not finish within 10 minutes.")), 600_000);
     const receive = (stream: "stdout" | "stderr", s: string) => {
       bytes += Buffer.byteLength(s);
-      if (bytes > 4 * 1024 * 1024) { stop(new Error("Вывод Git превышает 4 MiB. Сузьте выбор файлов.")); return; }
+      if (bytes > 4 * 1024 * 1024) { stop(new Error("Git output exceeds 4 MiB. Select fewer files.")); return; }
       if (stream === "stdout") stdout += s; else stderr += s;
       options.onOutput?.(s);
     };
@@ -42,7 +42,7 @@ export async function git(path: string, args: string[], options: {
       if (failure) kill("SIGKILL");
       cleanup();
       if (failure) reject(failure);
-      else if (!(options.allowed ?? [0]).includes(code ?? -1)) reject(new Error(stderr.trim() || stdout.trim() || `Git завершился с кодом ${code}.`));
+      else if (!(options.allowed ?? [0]).includes(code ?? -1)) reject(new Error(stderr.trim() || stdout.trim() || `Git exited with code ${code}.`));
       else done({ stdout, stderr, code: code ?? -1 });
     });
   });
@@ -101,7 +101,7 @@ export async function diff(path: string, pathspec: string, staged: boolean, sign
   const root = await repository(path, signal);
   const changes = parseStatus((await git(root, ["status", "--porcelain=v1", "-z", "--untracked-files=all"], { signal })).stdout);
   const change = changes.find((c) => c.path === pathspec);
-  if (!change) throw new Error("Файл больше не изменён. Обновите список.");
+  if (!change) throw new Error("The file is no longer modified. Refresh the list.");
   const paths = [pathspec, ...(change.original ? [change.original] : [])];
   const args = change.index === "?"
     ? ["diff", "--no-index", "--no-ext-diff", "--no-textconv", "--", process.platform === "win32" ? "NUL" : "/dev/null", pathspec]
@@ -116,7 +116,7 @@ export async function perform(path: string, action: Action, options: Parameters<
     const status = parseStatus((await git(path, ["status", "--porcelain=v1", "-z", "--untracked-files=all"], { signal: options?.signal })).stdout);
     const paths = action.paths.flatMap((p) => {
       const change = status.find((c) => c.path === p);
-      if (!change) throw new Error(`Файл больше не изменён: ${p}`);
+      if (!change) throw new Error(`The file is no longer modified: ${p}`);
       return [p, ...(change.original ? [change.original] : [])];
     });
     if (action.kind === "stage") await run(["add", "--all", "--", ...paths]);
@@ -128,12 +128,12 @@ export async function perform(path: string, action: Action, options: Parameters<
   else if (action.kind === "pull") await run(["pull", "--ff-only"]);
   else if (action.kind === "fetch" || action.kind === "push" || action.kind === "remote") {
     const names = (await git(path, ["remote"], { signal: options?.signal })).stdout.split(/\r?\n/);
-    if (!names.includes(action.remote)) throw new Error("Remote не найден. Обновите список.");
+    if (!names.includes(action.remote)) throw new Error("Remote not found. Refresh the list.");
     if (action.kind === "remote") await run(["remote", "set-url", "--", action.remote, action.url]);
     else if (action.kind === "fetch") await run(["fetch", "--", action.remote]);
     else {
       const branch = await git(path, ["symbolic-ref", "--quiet", "--short", "HEAD"], { signal: options?.signal, allowed: [0, 1] });
-      if (!branch.stdout.trim()) throw new Error("Для Push сначала переключитесь на ветку.");
+      if (!branch.stdout.trim()) throw new Error("Check out a branch before pushing.");
       const upstream = await git(path, ["for-each-ref", "--format=%(upstream:remotename)%00%(upstream:remoteref)", `refs/heads/${branch.stdout.trim()}`], { signal: options?.signal });
       const [remote, ref] = upstream.stdout.trim().split("\0");
       await run(remote === action.remote && ref ? ["push", "--", action.remote, `HEAD:${ref}`] : ["push", "--set-upstream", "--", action.remote, "HEAD"]);
@@ -149,7 +149,7 @@ export async function perform(path: string, action: Action, options: Parameters<
     await run(["branch", "-d", "--", action.branch]);
   } else if (action.kind === "merge") {
     const status = await git(path, ["status", "--porcelain=v1"], { signal: options?.signal });
-    if (status.stdout) throw new Error("Перед merge закоммитьте изменения. Рабочая директория должна быть чистой.");
+    if (status.stdout) throw new Error("Commit your changes before merging. The working directory must be clean.");
     await run(["merge", "--no-edit", "--", action.branch]);
   } else if (action.kind === "merge-abort") await run(["merge", "--abort"]);
   else if (action.kind === "merge-continue") {

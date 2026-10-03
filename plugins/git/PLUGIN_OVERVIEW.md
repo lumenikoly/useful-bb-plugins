@@ -1,30 +1,29 @@
-## Git рядом с кодом
+## Git alongside your code
 
-Git tool window в BB по образцу IntelliJ IDEA: дерево веток, журнал с графом,
-детали коммита и diff файлов. Отдельная вкладка изменений содержит staging,
-сообщение коммита и diff рядом или в строку.
-Открывается отдельной страницей и вкладкой правой панели треда.
+An IntelliJ IDEA inspired Git tool window in BB: a branch browser, commit graph,
+commit details and file diffs. The Changes view provides staging, commit messages
+and side-by-side or unified diffs. Open it as a dedicated page or a thread panel.
 
-### Что доступно
+### Features
 
-- Выбор проекта и checkout, включая окружение текущего треда и удалённые hosts.
-- Staging выбранных файлов и удаление из stage с сохранением рабочей копии.
-- Коммиты через стандартный Git с его hooks и настройками подписи.
-- Поиск и избранное для локальных и удалённых веток; фильтр журнала по ветке.
-- Checkout, создание от ветки/коммита, tracking, переименование и безопасное удаление.
-- Merge с завершением/отменой при конфликтах и сравнение ветки с HEAD.
-- Граф коммитов, поиск по загруженной истории, файлы и diff выбранного коммита.
-- Fetch, обычный Push и Pull с `--ff-only`.
-- Отдельное имя/email автора и SSH-настройки каждого репозитория.
-- Ввод SSH-пароля, passphrase и HTTPS credentials по запросу Git/OpenSSH.
+- Project and checkout selection, including the current thread’s environment and remote hosts.
+- Stage selected files and unstage them while preserving the working tree.
+- Standard Git commits with hooks and signing settings.
+- Search and favorite local and remote branches; filter the log by branch.
+- Checkout, create from a branch or commit, tracking, rename and safe deletion.
+- Merge with conflict recovery or abort, and compare a branch with HEAD.
+- Commit graph, search loaded history, inspect files and view commit diffs.
+- Fetch, regular Push and fast-forward-only Pull.
+- Per-repository author identity and SSH settings.
+- On-demand SSH passwords, passphrases and HTTPS credentials.
 
-### Системный Git и SSH
+### System Git and SSH
 
-Команды исполняются на машине checkout. Используются обычные Git-конфиги,
-`~/.ssh/config`, SSH-алиасы, ключи, `ssh-agent` и credential helpers. Настройки
-проекта записываются через `git config --local`; глобальный конфиг не меняется.
-Ответы askpass плагин хранит только в памяти, host key автоматически не принимает.
+Commands run on the checkout’s host using its Git config, `~/.ssh/config`,
+SSH aliases, keys, ssh-agent and credential helpers. Project settings use
+`git config --local`; the global config is unchanged. The plugin keeps askpass
+responses in memory and requires explicit confirmation of new SSH host keys.
 
-Нужны BB 0.45+, SDK 0.6.15+, Node.js 22.18+, Git и OpenSSH. Первая версия
-поддерживает Linux/macOS. Конфликты исправляются в редакторе и отмечаются stage;
-для сложных операций остаётся обычный Git-терминал.
+Requires BB 0.45+, SDK 0.6.15+, Node.js 22.18+, Git and OpenSSH. This version
+supports Linux/macOS. Resolve conflicts in your editor and stage the files;
+use a regular Git terminal for advanced operations.

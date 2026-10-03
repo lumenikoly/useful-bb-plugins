@@ -1,17 +1,17 @@
 ---
 name: project-themes
-description: Настройка цветов проектов через плагин Project Themes в bb.
+description: Customize project colors with the Project Themes plugin in bb.
 ---
 
-Откройте Settings → Project Themes → Цвета проектов. Выберите проект,
-включите нужные элементы, выберите готовый оттенок или «Свой цвет» и нажмите
-«Сохранить». Треды, вкладка браузера и фон настраиваются независимо.
+Open Settings → Project Themes → Project colors. Select a project, choose a
+preset or Custom color, enable the elements you want to tint, and click Save.
+Each project has one shared color and independent toggles for thread rows,
+browser tabs, and the background. All elements are enabled by default.
 
-Настройки сохраняются на сервере bb, синхронизируются между окнами и
-применяются при переходе в проект. «Сбросить» удаляет только настройки
-выбранного проекта. Цвет общий для проекта. Все элементы изначально включены.
+Settings persist on the bb server, sync across windows, and apply when navigating
+to a project. Reset restores defaults for the selected project only.
 
-Окраска тредов рассчитана на стандартный список bb. Фон и вкладки Browser
-следуют проекту текущего маршрута; при разделённом экране действует один
-общий фон. Внешняя вкладка браузера различается по цвету иконки bb.
-Плагин не меняет цвет системной рамки вкладки и содержимое сайтов.
+Thread tinting targets the standard bb thread list. The background and Browser
+tabs follow the current route's project; split views share one background.
+External browser tabs are identified by the tinted bb favicon. The plugin does
+not change system tab chrome or website content.

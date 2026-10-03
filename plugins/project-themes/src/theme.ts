@@ -1,17 +1,17 @@
 export const PALETTE = [
-  { name: "Шалфей", color: "#8fa58d" },
-  { name: "Эвкалипт", color: "#82a9a3" },
-  { name: "Голубой", color: "#8ba6bf" },
-  { name: "Лаванда", color: "#a399bb" },
-  { name: "Роза", color: "#be9aa5" },
-  { name: "Песок", color: "#b9aa88" },
-  { name: "Персик", color: "#c3a18a" },
-  { name: "Сланец", color: "#929fae" },
+  { name: "Sage", color: "#8fa58d" },
+  { name: "Eucalyptus", color: "#82a9a3" },
+  { name: "Blue", color: "#8ba6bf" },
+  { name: "Lavender", color: "#a399bb" },
+  { name: "Rose", color: "#be9aa5" },
+  { name: "Sand", color: "#b9aa88" },
+  { name: "Peach", color: "#c3a18a" },
+  { name: "Slate", color: "#929fae" },
 ] as const;
 export const SURFACES = [
-  { id: "threads", title: "Блоки тредов", description: "Строки проекта в списке тредов." },
-  { id: "browser", title: "Вкладка браузера", description: "Иконка bb и внутренние вкладки Browser." },
-  { id: "background", title: "Общий фон", description: "Лёгкий оттенок рабочей области и боковой панели." },
+  { id: "threads", title: "Thread rows", description: "Project rows in the thread list." },
+  { id: "browser", title: "Browser tab", description: "The bb favicon and internal Browser tabs." },
+  { id: "background", title: "Background", description: "A subtle tint for the workspace and sidebar." },
 ] as const;
 export type SurfaceId = (typeof SURFACES)[number]["id"];
 export type ProjectTheme = { color: string; threads: boolean; browser: boolean; background: boolean };

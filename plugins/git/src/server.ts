@@ -9,7 +9,7 @@ export default function plugin(bb: BbPluginApi) {
     const project = await bb.sdk.projects.get({ projectId });
     const sources: Target[] = project.sources.map((source) => ({
       id: `source:${source.id}`, projectId, hostId: source.hostId, path: source.path,
-      label: `${source.isDefault ? "Основной checkout" : "Checkout"} · ${source.path}`,
+      label: `${source.isDefault ? "Main checkout" : "Checkout"} · ${source.path}`,
     }));
     const environments = await bb.sdk.environments.list({ projectId, status: "ready", limit: 100 });
     let currentId: string | null = null;
@@ -19,7 +19,7 @@ export default function plugin(bb: BbPluginApi) {
     }
     const worktrees: Target[] = environments.filter((e) => e.path && e.isGitRepo && e.lifecycle.phase === "active").map((e) => ({
       id: `environment:${e.id}`, projectId, hostId: e.hostId, path: e.path!,
-      label: `${e.id === currentId ? "Текущий тред" : e.name || e.branchName || "Окружение"} · ${e.path}`,
+      label: `${e.id === currentId ? "Current thread" : e.name || e.branchName || "Environment"} · ${e.path}`,
     }));
     const ordered = [...worktrees.filter((t) => t.id === `environment:${currentId}`), ...sources, ...worktrees];
     return ordered.filter((t, i) => ordered.findIndex((other) => other.hostId === t.hostId && other.path === t.path) === i);
@@ -36,7 +36,7 @@ export default function plugin(bb: BbPluginApi) {
         return { hostId: e.hostId, path: e.path };
       }
     }
-    throw new Error("Checkout недоступен. Обновите список окружений.");
+    throw new Error("Checkout is unavailable. Refresh the environment list.");
   }
   bb.rpc.register(rpcContract, {
     projects: async () => (await bb.sdk.projects.list()).map(({ id, name }) => ({ id, name })),

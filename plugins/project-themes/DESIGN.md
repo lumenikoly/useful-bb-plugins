@@ -1,27 +1,25 @@
-# Оформление Project Themes
+# Project Themes design
 
-Плагин расширяет существующий интерфейс настроек bb. Режим: Operate.
-Главная задача — выбрать проект, включить нужные поверхности, подобрать цвет
-и сохранить. Не добавляет отдельную страницу или пункт основной навигации.
+Extends bb's existing settings UI in Operate mode. The primary task is to select
+a project, choose a color, toggle surfaces, and save. No extra navigation page.
 
-Использует шрифты и семантические CSS-переменные bb: foreground, background,
-muted-foreground, border, input, ring, sidebar. Формат — три строки с одинаковым
-порядком: название и пояснение, переключатель. Над строками — одна общая палитра
-из восьми образцов и системный color input для проекта.
-Предпросмотр и две кнопки завершают форму. Поле проекта занимает всю ширину.
+Uses bb fonts and semantic CSS tokens: foreground, background, muted-foreground,
+border, input, ring, and sidebar. One project-wide palette with eight swatches
+and a native color input precedes three rows, each with a label, description,
+and switch. The preview and Save/Reset buttons complete the form.
 
-Акцентная палитра: шалфей #8fa58d, эвкалипт #82a9a3, голубой #8ba6bf,
-лаванда #a399bb, роза #be9aa5, песок #b9aa88, персик #c3a18a, сланец #929fae.
-Это пользовательские акценты, а не замена токенов интерфейса настроек.
-Фон: 7% цвета на canvas текущей темы. Строки: 12%, hover 22%, выбранная 32%.
-Внутренние вкладки: 18%, активная 30%. Иконка вкладки принимает выбранный цвет.
+Accent palette: Sage #8fa58d, Eucalyptus #82a9a3, Blue #8ba6bf, Lavender #a399bb,
+Rose #be9aa5, Sand #b9aa88, Peach #c3a18a, Slate #929fae. These are user accents,
+not replacements for settings UI tokens. Background: 7% color over the theme
+canvas. Rows: 12%, hover 22%, selected 32%. Browser tabs: 18%, active 30%.
+The favicon uses the selected color.
 
-Все элементы изначально включены; один общий цвет проекта выбирается
-из палитры детерминированно по ID проекта. Изменения остаются в предпросмотре до
-сохранения. Формы имеют подписи, образцы — aria-pressed, переключатели — role=switch,
-результаты — role=status, ошибки — role=alert. Focus использует token ring.
-Системный выбор цвета без сторонней библиотеки. Движение ограничено переключателем
-и отключается при prefers-reduced-motion.
+All surfaces are enabled by default. The initial shared color is selected
+from the palette using the project ID. Edits stay in the preview until saved.
+Controls have labels; swatches use aria-pressed, switches role=switch,
+status messages role=status, and errors role=alert. Focus uses the ring token.
+Switch motion respects prefers-reduced-motion.
 
-Форма переносит образцы и выбор своего цвета на узких экранах. Цвет текста
-сохраняется из текущей темы, пользовательские цвета добавляются только к поверхностям.
+Swatches and the custom picker wrap on narrow screens. Text colors follow
+the current theme; project colors are applied to surfaces. All plugin copy,
+including accessible labels and status messages, is in English.

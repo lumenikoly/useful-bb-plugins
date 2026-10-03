@@ -9,7 +9,7 @@
   },
   "bb": {
     "name": "Git",
-    "description": "Git в BB: изменения, коммиты, push/pull и отдельный аккаунт для каждого проекта.",
+    "description": "Git in BB: branches, commits, push/pull and per-project accounts.",
     "branding": {
       "icon": "GitBranch"
     },
@@ -61,7 +61,7 @@
     "directory": "plugins/git"
   },
   "homepage": "https://github.com/lumenikoly/useful-bb-plugins/tree/main/plugins/git#readme",
-  "description": "Git в BB: изменения, коммиты, push/pull и отдельный аккаунт для каждого проекта.",
+  "description": "Git in BB: branches, commits, push/pull and per-project accounts.",
   "bugs": {
     "url": "https://github.com/lumenikoly/useful-bb-plugins/issues"
   }

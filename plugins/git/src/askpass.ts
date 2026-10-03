@@ -19,7 +19,7 @@ socket.setTimeout(600000, () => process.exit(1));
 const quote = (s: string) => "'" + s.replaceAll("'", "'\\''") + "'";
 
 export async function createAskpass(ask: (text: string, confirm: boolean) => Promise<string | null>, signal: AbortSignal) {
-  if (process.platform === "win32") throw new Error("Ввод пароля в панели пока поддерживается на Linux/macOS. Используйте SSH-agent или системный терминал.");
+  if (process.platform === "win32") throw new Error("Password entry in the panel is currently supported on Linux/macOS. Use ssh-agent or the system terminal.");
   const dir = await mkdtemp(join(tmpdir(), "bb-git-"));
   const socketPath = join(dir, "sock"), token = randomUUID();
   const sockets = new Set<Socket>();

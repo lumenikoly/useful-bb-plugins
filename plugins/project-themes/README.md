@@ -1,27 +1,28 @@
-# Project Themes для bb
+# Project Themes for bb
 
-Минималистичный плагин с отдельными цветами для каждого проекта.
+A minimal plugin that gives each project a subtle color accent.
 
-В **Settings → Project Themes → Цвета проектов** выберите проект и настройте:
+Open **Settings → Project Themes → Project colors**, select a project, and customize:
 
-- **Блоки тредов** — оттенок строк проекта в стандартном списке тредов.
-- **Вкладку браузера** — цвет иконки bb во внешнем браузере и внутренних вкладок Browser.
-- **Общий фон** — лёгкий оттенок рабочей области и боковой панели.
+- **Thread rows** — tint the project's rows in the standard thread list.
+- **Browser tab** — color the bb favicon and internal Browser tabs.
+- **Background** — subtly tint the workspace and sidebar.
 
-У проекта один общий цвет, а у каждого элемента свой переключатель. Доступны восемь спокойных оттенков
-и системный выбор цвета. Предпросмотр показывает изменения до сохранения.
-Нажмите **Сохранить** для применения или **Сбросить**, чтобы вернуть настройки
-выбранного проекта по умолчанию. Отключение элемента сохраняет выбранный цвет.
-По умолчанию все элементы включены; мягкий оттенок выбирается автоматически по ID проекта.
+Each project has one shared color and independent toggles for all three elements.
+Choose from eight muted presets or use the native color picker. The preview shows
+changes before you save. Click **Save** to apply them or **Reset** to restore the
+selected project's defaults. All elements are enabled by default; the initial
+color is determined by the project ID. Turning an element off keeps your color.
 
-Цвета хранятся на сервере bb и синхронизируются между окнами. При переключении
-проекта фон и иконка меняются автоматически. Строки разных проектов сохраняют
-свои цвета, даже когда видны одновременно. Отключение плагина убирает его стили
-и восстанавливает иконки bb.
+Settings are stored on the bb server and synchronized across windows. The background
+and favicon follow the current project. Rows from different projects retain their
+own colors when shown together. Disabling the plugin removes its styles and
+restores the original bb favicons.
 
-## Установка
+## Installation
 
-Команды ниже выполняются из корня монорепозитория. Требуются bb 0.45+ и Plugin SDK 0.6.15+ в пределах совместимого major.
+Run these commands from the monorepo root. Requires bb 0.45+ and a compatible
+Plugin SDK version starting at 0.6.15.
 
 ```sh
 npm install
@@ -29,7 +30,7 @@ npm run build --workspace=bb-plugin-project-themes
 bb plugin install path:. --plugin project-themes
 ```
 
-## Разработка и проверка
+## Development
 
 ```sh
 npm run typecheck --workspace=bb-plugin-project-themes
@@ -38,26 +39,25 @@ npm run build --workspace=bb-plugin-project-themes
 npm run dev:project-themes
 ```
 
-Тесты проверяют изоляцию проектов, сохранение после reload, сброс одного проекта,
-проверку входных данных и удаление стилей/восстановление иконок при отключении.
-`dist/` генерируется через `bb plugin build`; для публикации npm включите
-эти артефакты. Установка из локальной папки или Git собирает плагин автоматически.
+Tests cover project isolation, persistence across reloads, per-project reset,
+input validation, and cleanup of styles and favicons. `bb plugin build` generates
+`dist/`; include these artifacts when publishing to npm. Local path and Git
+installations build the plugin automatically.
 
-## Границы
+## Limitations
 
-Внешние браузеры разрешают изменить иконку вкладки; цвет самой системной вкладки
-контролирует браузер. Плагин не меняет содержимое сайтов или терминала.
-Фон смешивается с текущей темой bb, поэтому выбранный цвет остаётся мягким в
-светлом и тёмном режиме. Фон и внутренние вкладки следуют проекту текущего
-маршрута: разделённый экран использует один общий акцент.
+External browsers allow favicon customization; the browser controls the tab's
+system chrome. Website and terminal content are unaffected. Colors blend with
+the current bb theme to remain subtle in light and dark modes. The background
+and internal Browser tabs follow the current route's project; split views share
+one background accent.
 
-Окраска стандартных строк и внутренних вкладок использует DOM bb через
-официальный content-script API. При смене структуры интерфейса bb селекторы
-могут потребовать обновления. Альтернативные плагины списка тредов поддерживаются,
-если сохраняют стандартные маркеры строк.
+Thread and browser-tab styling uses bb's DOM through the official content-script
+API. Selectors may need updating if bb's UI structure changes. Alternative thread
+list plugins are supported when they preserve the standard row markers.
 
-Порядок независимых релизов: [RELEASING.md](https://github.com/lumenikoly/useful-bb-plugins/blob/main/docs/RELEASING.md).
+Release instructions: [RELEASING.md](https://github.com/lumenikoly/useful-bb-plugins/blob/main/docs/RELEASING.md).
 
-## Лицензия
+## License
 
 [MIT](LICENSE), copyright © 2026 lumenikoly.
