@@ -1,0 +1,69 @@
+{
+  "name": "bb-plugin-project-themes",
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "bb": ">=0.45",
+    "bbPluginSdk": ">=0.6.15",
+    "node": ">=22.18.0"
+  },
+  "bb": {
+    "name": "Project Themes",
+    "description": "Мягкие цвета для каждого проекта: треды, вкладка браузера и фон с независимыми переключателями.",
+    "branding": {
+      "icon": "Palette"
+    },
+    "server": "./src/server.ts",
+    "app": "./src/app.tsx"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@get-bb/plugin-sdk": "0.6.15",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.7.0",
+    "better-sqlite3": "^12.0.0",
+    "@types/better-sqlite3": "^7.6.12",
+    "cron-parser": "^5.5.0",
+    "hono": "^4.11.9",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "jsdom": "^29.0.1",
+    "@testing-library/react": "^16.3.2"
+  },
+  "scripts": {
+    "build": "bb plugin build",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "dev": "bb plugin dev",
+    "prepack": "npm run build"
+  },
+  "files": [
+    "src/",
+    "dist/",
+    "skills/",
+    "README.md",
+    "PLUGIN_OVERVIEW.md",
+    "CHANGELOG.md",
+    "tsconfig.json",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "lumenikoly",
+    "url": "https://github.com/lumenikoly"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lumenikoly/useful-bb-plugins.git",
+    "directory": "plugins/project-themes"
+  },
+  "homepage": "https://github.com/lumenikoly/useful-bb-plugins/tree/main/plugins/project-themes#readme",
+  "description": "Мягкие цвета для каждого проекта: треды, вкладка браузера и фон с независимыми переключателями.",
+  "bugs": {
+    "url": "https://github.com/lumenikoly/useful-bb-plugins/issues"
+  }
+}

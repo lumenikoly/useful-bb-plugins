@@ -1,0 +1,53 @@
+name: Plugin release draft
+
+on:
+  push:
+    tags: ['*-v*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Resolve plugin and version
+        id: plugin
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: node scripts/release-info.mjs "$RELEASE_TAG"
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Check and build the selected plugin
+        env:
+          PACKAGE_NAME: ${{ steps.plugin.outputs.package }}
+        run: |
+          npm run typecheck --workspace "$PACKAGE_NAME"
+          npm test --workspace "$PACKAGE_NAME"
+          npm run build --workspace "$PACKAGE_NAME"
+      - name: Pack the built plugin
+        env:
+          PACKAGE_NAME: ${{ steps.plugin.outputs.package }}
+        run: |
+          mkdir -p artifacts
+          npm pack --workspace "$PACKAGE_NAME" --ignore-scripts --pack-destination artifacts
+      - name: Create a draft GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          PLUGIN_NAME: ${{ steps.plugin.outputs.name }}
+          PLUGIN_VERSION: ${{ steps.plugin.outputs.version }}
+        run: |
+          gh release create "$RELEASE_TAG" artifacts/*.tgz \
+            --verify-tag --draft --generate-notes \
+            --title "$PLUGIN_NAME $PLUGIN_VERSION"

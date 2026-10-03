@@ -1,0 +1,45 @@
+.pt-settings { max-width: 660px; color: var(--foreground); font-size: 13px; }
+.pt-intro { margin: 0 0 24px; color: var(--muted-foreground); line-height: 1.6; }
+.pt-label { display: block; font-weight: 500; line-height: 1.5; }
+.pt-hint { margin: 4px 0 0; color: var(--muted-foreground); font-size: 12px; line-height: 1.5; }
+.pt-select { width: 100%; height: 38px; margin-top: 8px; padding: 0 10px; border: 1px solid var(--input); border-radius: 6px; background: var(--background); color: var(--foreground); font: inherit; }
+.pt-editor { min-width: 0; margin: 24px 0 0; padding: 0; border: 0; }
+.pt-project-color { padding-bottom: 20px; }
+.pt-surface { padding: 18px 0; border-top: 1px solid var(--border); }
+.pt-surface-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.pt-toggle { appearance: none; width: 32px; height: 20px; flex-shrink: 0; margin: 0; border: 1px solid var(--border); border-radius: 12px; background: var(--muted); cursor: pointer; }
+.pt-toggle::before { content: ""; display: block; width: 14px; height: 14px; margin: 2px; border-radius: 50%; background: var(--muted-foreground); transition: transform 120ms ease-out; }
+.pt-toggle:checked { background: var(--foreground); border-color: var(--foreground); }
+.pt-toggle:checked::before { background: var(--background); transform: translateX(12px); }
+.pt-colors { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 14px; }
+.pt-swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+.pt-swatch { width: 28px; height: 28px; padding: 0; border: 3px solid var(--background); border-radius: 50%; background: var(--pt-swatch); outline: 1px solid transparent; cursor: pointer; }
+.pt-swatch:hover { outline-color: var(--muted-foreground); }
+.pt-swatch[aria-pressed="true"] { outline-color: var(--foreground); }
+.pt-custom { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; }
+.pt-custom input { width: 28px; height: 28px; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: transparent; cursor: pointer; overflow: hidden; }
+.pt-custom input::-webkit-color-swatch-wrapper { padding: 3px; }
+.pt-custom input::-webkit-color-swatch { border: 0; border-radius: 3px; }
+.pt-custom input::-moz-color-swatch { border: 0; border-radius: 3px; }
+.pt-hex { color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+.pt-preview { display: flex; min-height: 106px; margin-top: 12px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.pt-preview-sidebar { flex: 0 0 40%; padding: 14px; border-right: 1px solid var(--border); }
+.pt-preview-label { display: block; color: var(--muted-foreground); font-size: 11px; }
+.pt-preview-thread { margin-top: 10px; padding: 7px 10px; border-radius: 5px; }
+.pt-preview-main { display: flex; flex: 1; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 14px; }
+.pt-preview-tab { display: inline-flex; align-items: center; gap: 7px; padding: 5px 9px; border-radius: 5px; font-size: 12px; }
+.pt-preview-dot { width: 8px; height: 8px; border-radius: 50%; }
+.pt-footer { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 20px; }
+.pt-footer .pt-hint { flex-basis: 100%; margin: 2px 0 0; }
+.pt-button { min-height: 34px; padding: 0 12px; border: 0; border-radius: 6px; font: inherit; font-weight: 500; cursor: pointer; }
+.pt-save { background: var(--foreground); color: var(--background); }
+.pt-save:hover { opacity: .88; }
+.pt-reset { background: transparent; color: var(--muted-foreground); }
+.pt-reset:hover { background: var(--state-hover); color: var(--foreground); }
+.pt-error { margin: 12px 0; color: var(--destructive-text, var(--destructive)); line-height: 1.6; }
+.pt-link { color: inherit; text-decoration: underline; cursor: pointer; }
+.pt-settings :is(button, input, select):focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+.pt-settings :is(button, input):disabled { opacity: .45; cursor: default; }
+.pt-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@media (max-width: 480px) { .pt-colors { gap: 12px; } .pt-swatch { width: 32px; height: 32px; } .pt-toggle { width: 38px; height: 24px; } .pt-toggle::before { width: 18px; height: 18px; } .pt-toggle:checked::before { transform: translateX(14px); } .pt-preview-sidebar, .pt-preview-main { padding: 10px; } }
+@media (prefers-reduced-motion: reduce) { .pt-toggle::before { transition: none; } }
