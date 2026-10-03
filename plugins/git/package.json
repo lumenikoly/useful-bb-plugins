@@ -1,0 +1,68 @@
+{
+  "name": "bb-plugin-git",
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "bb": ">=0.45",
+    "bbPluginSdk": ">=0.6.15",
+    "node": ">=22.18.0"
+  },
+  "bb": {
+    "name": "Git",
+    "description": "Git в BB: изменения, коммиты, push/pull и отдельный аккаунт для каждого проекта.",
+    "branding": {
+      "icon": "GitBranch"
+    },
+    "server": "./src/server.ts",
+    "app": "./src/app.tsx",
+    "host": "./src/host.ts"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@get-bb/plugin-sdk": "0.6.15",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.7.0",
+    "better-sqlite3": "^12.0.0",
+    "@types/better-sqlite3": "^7.6.12",
+    "cron-parser": "^5.5.0",
+    "hono": "^4.11.9",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "scripts": {
+    "build": "bb plugin build",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "dev": "bb plugin dev",
+    "prepack": "npm run build"
+  },
+  "files": [
+    "src/",
+    "dist/",
+    "skills/",
+    "README.md",
+    "PLUGIN_OVERVIEW.md",
+    "CHANGELOG.md",
+    "tsconfig.json",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "lumenikoly",
+    "url": "https://github.com/lumenikoly"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lumenikoly/useful-bb-plugins.git",
+    "directory": "plugins/git"
+  },
+  "homepage": "https://github.com/lumenikoly/useful-bb-plugins/tree/main/plugins/git#readme",
+  "description": "Git в BB: изменения, коммиты, push/pull и отдельный аккаунт для каждого проекта.",
+  "bugs": {
+    "url": "https://github.com/lumenikoly/useful-bb-plugins/issues"
+  }
+}

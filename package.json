@@ -12,7 +12,8 @@
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "dev:project-themes": "npm run dev --workspace=bb-plugin-project-themes"
+    "dev:project-themes": "npm run dev --workspace=bb-plugin-project-themes",
+    "dev:git": "npm run dev --workspace=bb-plugin-git"
   },
   "devDependencies": {
     "bb-app": "0.45.0"

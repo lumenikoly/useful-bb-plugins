@@ -6,6 +6,7 @@
 | Плагин | Пакет | Описание |
 | --- | --- | --- |
 | [Project Themes](plugins/project-themes/README.md) | `bb-plugin-project-themes` | Один мягкий цвет на проект: треды, вкладка браузера и общий фон. |
+| [Git](plugins/git/README.md) | `bb-plugin-git` | Изменения, diff, staging, коммиты, ветки и push/pull с отдельным аккаунтом проекта. |
 
 ## Структура
 

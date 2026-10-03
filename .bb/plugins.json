@@ -6,6 +6,10 @@
     {
       "name": "project-themes",
       "source": "./plugins/project-themes"
+    },
+    {
+      "name": "git",
+      "source": "./plugins/git"
     }
   ]
 }

@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-03T19:24:37.229013+00:00",
+  "title": "Design System: BB Git",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "BB primary"
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "BB background"
+      },
+      "log-selection": {
+        "role": "primary",
+        "displayName": "Muted blue log selection"
+      }
+    },
+    "shadows": [
+      {
+        "name": "branch-menu",
+        "value": "0 8px 24px rgb(0 0 0 / .15)",
+        "purpose": "Elevate the branch overflow menu above the log."
+      },
+      {
+        "name": "credential-modal",
+        "value": "0 20px 60px rgb(0 0 0 / .25)",
+        "purpose": "Separate protected input from the waiting operation."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "log-compact-container",
+        "value": "1050px"
+      },
+      {
+        "name": "log-lower-inspector-container",
+        "value": "780px"
+      },
+      {
+        "name": "log-narrow-container",
+        "value": "520px"
+      },
+      {
+        "name": "changes-compact-viewport",
+        "value": "760px"
+      },
+      {
+        "name": "changes-stacked-viewport",
+        "value": "520px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Native toolbar and secondary action.",
+      "html": "<button class=\"ds-button\">Fetch</button>",
+      "css": ".ds-button{font:inherit;color:var(--foreground);min-height:30px;padding:4px 10px;border:1px solid var(--border);border-radius:5px;background:var(--background);cursor:pointer;}.ds-button:hover{background:var(--state-hover,var(--muted));}.ds-button:focus-visible{outline:2px solid var(--ring);outline-offset:2px;}.ds-button:disabled{opacity:.5;cursor:default;}"
+    },
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Commit or save action.",
+      "html": "<button class=\"ds-primary\">Commit · 2</button>",
+      "css": ".ds-primary{font:inherit;color:var(--foreground);min-height:30px;padding:4px 10px;border:1px solid var(--border);border-radius:5px;background:var(--background);cursor:pointer;background:var(--primary);color:var(--primary-foreground);border-color:transparent;white-space:nowrap;}.ds-primary:hover{opacity:.9;}.ds-primary:focus-visible{outline:2px solid var(--ring);outline-offset:2px;}.ds-primary:disabled{opacity:.5;cursor:default;}"
+    },
+    {
+      "name": "Text field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Labeled repository account field.",
+      "html": "<label class=\"ds-label\" for=\"ds-email\">Email автора</label><input class=\"ds-input\" id=\"ds-email\" placeholder=\"user.email\">",
+      "css": ".ds-label{display:block;margin:14px 0 7px;font:inherit;font-size:12px;font-weight:500;color:var(--foreground);}.ds-input{width:100%;padding:8px 10px;border:1px solid var(--input);border-radius:5px;background:var(--background);font:inherit;color:var(--foreground);}.ds-input:focus-visible{outline:2px solid var(--ring);outline-offset:2px;}.ds-input:disabled{opacity:.5;}"
+    },
+    {
+      "name": "Workspace tabs",
+      "kind": "nav",
+      "description": "Log, Changes and Account navigation.",
+      "html": "<div class=\"ds-tabs\" role=\"tablist\" aria-label=\"Git панели\"><button role=\"tab\" aria-selected=\"true\">Журнал</button><button role=\"tab\" aria-selected=\"false\">Изменения · 2</button><button role=\"tab\" aria-selected=\"false\">Аккаунт и SSH</button></div>",
+      "css": ".ds-tabs{display:flex;gap:24px;padding:0 16px;border-bottom:1px solid var(--border);}.ds-tabs button{font:inherit;min-height:30px;font-size:12px;padding:10px 0;border:0;border-bottom:2px solid transparent;border-radius:0;color:var(--muted-foreground);background:transparent;cursor:pointer;}.ds-tabs button[aria-selected=true]{color:var(--foreground);border-bottom-color:#5686dc;}.ds-tabs button:hover{background:var(--state-hover,var(--muted));}.ds-tabs button:focus-visible{outline:2px solid var(--ring);outline-offset:2px;}"
+    },
+    {
+      "name": "Selected file row",
+      "kind": "custom",
+      "description": "Selected path in staged or working changes.",
+      "html": "<div class=\"ds-file-row\"><input type=\"checkbox\" aria-label=\"Выбрать src/app.tsx\"><button class=\"ds-file\"><span class=\"ds-status\">M</span><span>src/app.tsx</span></button></div>",
+      "css": ".ds-file-row{display:flex;align-items:center;gap:5px;padding:0 8px 0 12px;background:var(--accent);color:var(--foreground);}.ds-file-row input{width:14px;height:14px;accent-color:var(--primary);}.ds-file{display:flex;flex:1;gap:8px;min-width:0;text-align:left;border:0;background:transparent;padding:6px 4px;font:inherit;color:inherit;cursor:pointer;}.ds-file span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.ds-status{width:15px;color:var(--muted-foreground);font-family:monospace;}.ds-file:hover{background:var(--state-hover,var(--muted));}.ds-file:focus-visible{outline:2px solid var(--ring);outline-offset:2px;}.ds-file-row input:focus-visible{outline:2px solid var(--ring);outline-offset:2px;}"
+    },
+    {
+      "name": "Selected commit row",
+      "kind": "custom",
+      "description": "Dense selected log entry; graph connections are supplied by real commit parents.",
+      "html": "<button class=\"ds-log-row\"><span>Refine branch browser</span><span>Alex</span><time>03 окт.</time></button>",
+      "css": ".ds-log-row{display:grid;grid-template-columns:minmax(0,1fr) 105px 58px;align-items:center;gap:12px;width:100%;height:32px;padding:0 12px;border:0;border-radius:0;font:inherit;font-size:12px;text-align:left;color:var(--foreground);background:color-mix(in srgb,#578bea 17%,var(--background));}.ds-log-row>span:last-of-type,.ds-log-row time{font-size:10px;color:var(--muted-foreground);}.ds-log-row time{font-variant-numeric:tabular-nums;}.ds-log-row:focus-visible{outline:2px solid var(--ring);outline-offset:2px;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "BB's native Git workspace",
+    "overview": "BB's native Git tool window follows the user-pinned IntelliJ IDEA Git Log reference: a branch browser, an actual parent graph and a revision inspector. The dense, flat workspace inherits BB's theme and font, using restrained blue selection and small colored graph lanes to organize repository history. Log, Changes and Account are separate tabs.",
+    "keyCharacteristics": [
+      "Host-themed surfaces, compact controls and bordered panes.",
+      "Branch browsing, graph history and revision details share one desktop view.",
+      "Responsive lower inspector, optional branch pane and authored SVG controls."
+    ],
+    "rules": [
+      {
+        "name": "The Host Surface Rule",
+        "body": "Resolve surfaces, text, borders and focus from BB tokens; reserve fixed colors for restrained selection, graph lanes and Git status cues.",
+        "section": "colors"
+      },
+      {
+        "name": "The Browse Before Checkout Rule",
+        "body": "Selecting a branch changes the history being browsed; checkout remains a separately labeled action.",
+        "section": "components"
+      },
+      {
+        "name": "The Parent Graph Rule",
+        "body": "Draw graph connections from commit parent hashes; when text filtering hides intervening commits, show dots without connecting lines.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do inherit BB surface tokens, font and visible keyboard focus.",
+      "Do keep branch browsing, commit selection and explicit checkout distinct.",
+      "Do preserve the native host Diff renderer and expose pane controls at narrow widths.",
+      "Do use the authored SVG icon family for branch, favorite, pane and overflow controls."
+    ],
+    "donts": [
+      "Don't turn the Git Log into a commit form or a card dashboard.",
+      "Don't invent graph connections between filtered commits.",
+      "Don't freeze the host surface palette or introduce a display font into this native tool."
+    ]
+  }
+}
