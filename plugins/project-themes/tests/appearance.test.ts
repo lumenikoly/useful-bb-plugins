@@ -29,6 +29,10 @@ test("content-script cleanup restores icons and CSS and ignores late image loads
   assert.match(dom.window.document.querySelector("style")!.textContent!, /--background:/);
   publishAppearance({ themes: { proj_one: theme }, projectId: "proj_two" });
   assert.equal(icon.getAttribute("href"), "/original.png");
+  const css = dom.window.document.querySelector("style")!.textContent!;
+  assert.match(css, /\/projects\/proj_one\/threads\//);
+  assert.doesNotMatch(css, /--background:|secondary-panel-tab-strip/);
+  publishAppearance({ themes: {}, projectId: null });
   assert.equal(dom.window.document.querySelector("style")!.textContent, "");
   publishAppearance({ themes: { proj_one: theme }, projectId: "proj_one" });
   controller.abort();
