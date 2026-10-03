@@ -2,7 +2,7 @@ import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from 
 import { definePluginApp, experimental_Diff as Diff, experimental_Icon as Icon, useBbContext, useRpc, type PluginThreadPanelProps } from "@get-bb/plugin-sdk/app";
 import type { Action, Change, Job, Snapshot, Target, rpcContract } from "./contracts.ts";
 import "./app.css";
-import { GitLog } from "./log.tsx";
+import { GitLog, Glyph } from "./log.tsx";
 
 type Rpc = ReturnType<typeof useRpc<typeof rpcContract>>;
 const errorText = (error: unknown) => error instanceof Error ? error.message : String(error);
@@ -56,7 +56,7 @@ function GitPage({ threadId: panelThreadId }: { threadId?: string }) {
         {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
       </select>
       <select aria-label="Checkout" value={targetId} disabled={busy || !targets.length} onChange={(e) => { setTargetId(e.target.value); save(`bb-git-target:${projectId}`, e.target.value); }}>
-        {targets.map((t) => <option key={t.id} value={t.id}>{t.label} · {t.hostId}</option>)}
+        {targets.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
       </select>
     </div>
     {error && <div className="git-error" role="alert">{error} <button onClick={() => setRevision((v) => v + 1)}>Повторить</button></div>}
@@ -197,17 +197,19 @@ function Repository({ rpc, target, onBusy }: { rpc: Rpc; target: Target; onBusy:
       <span className="git-current-branch"><Icon name="GitBranch" className="git-icon" /><strong>{data.branch}</strong></span>
       <span className="git-tracking" title={data.upstream || "Нет upstream"}>{data.upstream || "Без upstream"}{data.upstream ? ` · ↑${data.ahead} ↓${data.behind}` : ""}</span>
       <select aria-label="Remote для Fetch и Push" value={remote} disabled={busy || !data.remotes.length} onChange={(e) => setRemote(e.target.value)}>{data.remotes.map((r) => <option key={r.name}>{r.name}</option>)}</select>
-      <button disabled={busy || !remote} onClick={() => void start({ kind: "fetch", remote })}>Fetch</button>
-      <button disabled={busy || !data.upstream} title="git pull --ff-only из текущего upstream" onClick={() => void start({ kind: "pull" })}>Pull</button>
-      <button disabled={busy || !remote || data.unborn} onClick={() => void start({ kind: "push", remote })}>Push</button>
-      <button aria-label="Обновить состояние Git" onClick={() => { setError(""); void refresh(); }}>Обновить</button>
+      <button className="git-icon-button" aria-label="Fetch" title="Fetch — получить изменения с сервера" disabled={busy || !remote} onClick={() => void start({ kind: "fetch", remote })}><Glyph name="fetch" /></button>
+      <button className="git-icon-button" aria-label="Pull" disabled={busy || !data.upstream} title="Pull — обновить текущую ветку (fast-forward)" onClick={() => void start({ kind: "pull" })}><Glyph name="pull" /></button>
+      <button className="git-icon-button" aria-label="Push" title="Push — отправить текущую ветку" disabled={busy || !remote || data.unborn} onClick={() => void start({ kind: "push", remote })}><Glyph name="push" /></button>
+      <button className="git-icon-button" aria-label="Обновить состояние Git" title="Обновить состояние Git" onClick={() => { setError(""); void refresh(); }}><Glyph name="refresh" /></button>
+      <span className="git-toolbar-divider" aria-hidden="true" />
+      <button className="git-icon-button git-settings-button" aria-label="Аккаунт и SSH" title="Аккаунт и SSH" aria-pressed={tab === "account"} onClick={() => setTab((current) => current === "account" ? "history" : "account")}><Glyph name="settings" /></button>
     </div>
     {error && <p role="alert" className="git-error">{error}<button aria-label="Скрыть ошибку" onClick={() => setError("")}>Закрыть</button></p>}
-        <div className="git-tabs" role="tablist" aria-label="Git панели">{(["history", "diff", "account"] as const).map((id, i, tabs) => <button key={id} id={`${panelId}-${id}`} role="tab" tabIndex={tab === id ? 0 : -1} aria-selected={tab === id} onClick={() => setTab(id)} onKeyDown={(e) => {
+        <div className="git-tabs" role="tablist" aria-label="Git панели">{(["history", "diff"] as const).map((id, i, tabs) => <button key={id} id={`${panelId}-${id}`} role="tab" tabIndex={tab === id || tab === "account" && id === "history" ? 0 : -1} aria-selected={tab === id} onClick={() => setTab(id)} onKeyDown={(e) => {
           const next = e.key === "ArrowRight" ? (i + 1) % tabs.length : e.key === "ArrowLeft" ? (i + tabs.length - 1) % tabs.length : e.key === "Home" ? 0 : e.key === "End" ? tabs.length - 1 : null;
           if (next === null) return;
           e.preventDefault(); setTab(tabs[next]); (e.currentTarget.parentElement?.children[next] as HTMLElement | undefined)?.focus();
-        }}>{id === "diff" ? `Изменения · ${data.changes.length}` : id === "history" ? "Журнал" : "Аккаунт и SSH"}</button>)}</div>
+        }}>{id === "diff" ? `Изменения · ${data.changes.length}` : "Журнал"}</button>)}</div>
     {data.merging && <div className="git-merge-banner"><strong>Merge не завершён</strong><span>{conflicts.length ? `Конфликты: ${conflicts.length}. Исправьте файлы и добавьте в stage.` : "Конфликты разрешены. Завершите merge."}</span><button onClick={() => setTab("diff")}>Открыть изменения</button><button disabled={busy || !!conflicts.length} onClick={() => void start({ kind: "merge-continue" })}>Завершить merge</button><button disabled={busy} onClick={() => void start({ kind: "merge-abort" })}>Отменить merge</button></div>}
     <div className="git-log-tab" hidden={tab !== "history"}><GitLog rpc={rpc} target={target} data={data} busy={busy} start={start} /></div>
     {tab === "account" && <div className="git-account-scroll"><Account key={JSON.stringify(data.config) + JSON.stringify(data.remotes)} data={data} busy={busy} start={start} /></div>}

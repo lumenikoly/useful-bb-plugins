@@ -241,3 +241,16 @@
 .git-page .git-favorite { display: inline-flex; justify-content: center; align-items: center; }
 .git-branch-menu summary { display: flex; align-items: center; }
 .git-ref-badges .git-glyph { width: 10px; height: 10px; margin-right: 3px; }
+
+/* Rare settings live with toolbar controls, not the working-view tabs. */
+.git-toolbar .git-icon-button { width: 30px; height: 30px; flex: none; color: var(--muted-foreground); }
+.git-toolbar .git-icon-button:hover { color: var(--foreground); background: var(--state-hover, var(--muted)); }
+.git-toolbar .git-settings-button[aria-pressed=true] { color: var(--foreground); background: color-mix(in srgb, #578bea 17%, var(--background)); }
+.git-toolbar-divider { height: 16px; width: 1px; flex: none; background: var(--border); margin: 0 3px; }
+@container (max-width: 520px) {
+  .git-toolbar { gap: 3px; }
+  .git-toolbar .git-tracking { display: none; }
+  .git-current-branch { flex: 1; max-width: none; min-width: 40px; }
+  .git-toolbar > select { max-width: 65px; }
+  .git-toolbar .git-icon-button { width: 28px; height: 30px; }
+}

@@ -7,8 +7,13 @@ const colors = ["#7c83db", "#48a87b", "#d69a48", "#c573bd", "#4ba5c5"];
 const date = (value: string) => new Date(value).toLocaleDateString("ru-RU", { day: "2-digit", month: "short" });
 const errorText = (e: unknown) => e instanceof Error ? e.message : String(e);
 
-function Glyph({ name, filled = false }: { name: "branch" | "star" | "plus" | "pane" | "more" | "close" | "head"; filled?: boolean }) {
+export function Glyph({ name, filled = false }: { name: "branch" | "star" | "plus" | "pane" | "more" | "close" | "head" | "fetch" | "pull" | "push" | "refresh" | "settings"; filled?: boolean }) {
   const paths = {
+    fetch: <><path d="M5 13H4a3 3 0 0 1-.4-6A5 5 0 0 1 13 5a4 4 0 0 1 3 8h-1M10 9v8m-3-3 3 3 3-3" /></>,
+    pull: <><path d="M10 2v11m-4-4 4 4 4-4M3 14v3h14v-3" /></>,
+    push: <><path d="M10 14V3m-4 4 4-4 4 4M3 14v3h14v-3" /></>,
+    refresh: <><path d="M16 7a6.5 6.5 0 1 0 .4 5M16 3v4h-4" /></>,
+    settings: <><path d="m8 2-.5 2-2 .9-1.9-.6-2 3.4L3 9v2l-1.4 1.3 2 3.4 1.9-.6 2 .9.5 2h4l.5-2 2-.9 1.9.6 2-3.4L17 11V9l1.4-1.3-2-3.4-1.9.6-2-.9L12 2Z" /><circle cx="10" cy="10" r="3" /></>,
     branch: <><circle cx="5" cy="4" r="2" /><circle cx="5" cy="16" r="2" /><circle cx="15" cy="4" r="2" /><path d="M5 6v8M15 6v1a5 5 0 0 1-5 5H5" /></>,
     star: <path d="m10 2 2.5 5.1 5.6.8-4.1 4 1 5.6-5-2.6-5 2.6 1-5.6-4.1-4 5.6-.8Z" />,
     plus: <path d="M10 3v14M3 10h14" />,

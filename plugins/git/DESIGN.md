@@ -141,3 +141,11 @@ Branch actions and Git/SSH prompts share native modal styling and explicit label
 - Don't turn the Git Log into a commit form or a card dashboard.
 - Don't invent graph connections between filtered commits.
 - Don't freeze the host surface palette or introduce a display font into this native tool.
+
+## Compact toolbar
+
+Fetch, Pull, Push and refresh use the shared 15px SVG family in 30px buttons,
+with native tooltips and accessible names. A divider separates the Account/SSH
+gear; its pressed state marks the settings view. Only Log and Changes remain
+in the tab strip. At narrow widths the upstream text hides; full tracking
+information remains in the branch browser footer.
