@@ -91,7 +91,7 @@ The host font is inherited throughout this utility interface. The compact body i
 
 Project and checkout selectors, a wrapping network toolbar and the Log / Changes / Checks tab strip precede the workspace. The desktop Log grid is `minmax(190px, 21%) minmax(280px, 1fr) minmax(220px, 26%)`: branch browser left, graph log middle, changed files and commit details right. Each pane scrolls independently. The branch-pane toggle gives the log more room. Selecting a revision file opens the host Diff renderer in a lower panel (42% height, minimum 180px).
 
-Log responsiveness follows the tool window's container width. At (1050px), pane widths tighten and author columns disappear. At (780px), branches occupy the left column and the revision inspector moves below the log; inspector files and details sit side by side. At (520px), the branch column narrows to (128px), date columns and reference badges hide, and inspector files and details stack. The branch toggle remains available.
+Log responsiveness follows the tool window's container width. At (1050px), pane widths tighten and author columns disappear. At (780px), branches occupy a (190px) left column and the revision inspector moves below the log; inspector files and details sit side by side. At (520px), the branch column narrows to (160px), branch-row actions sit below the full-width name, date columns and reference badges hide, and inspector files and details stack. The branch toggle remains available.
 
 Changes retains its own files/commit and Diff split: `minmax(230px, 30%) minmax(0, 1fr)`. Viewport media queries tighten that split at (760px) and stack it at (520px). Account content scrolls and caps at (650px). Compact spacing repeats around controls and dividers; log rows are (32px) high.
 
@@ -115,7 +115,7 @@ Native compact buttons use host colors, hover treatment and disabled opacity (0.
 
 ### Navigation and branch browser
 
-The top-level tab strip uses an active blue underline, explicit labels and arrow/Home/End keyboard navigation. The branch tree groups favorites, local branches and remotes; selected rows receive a soft blue fill. Favorites become visible on hover or keyboard focus, remain visible when active, and are always exposed at the narrowest container size. Branch controls use authored SVG shapes and accessible button labels.
+The top-level tab strip uses an active blue underline, explicit labels and arrow/Home/End keyboard navigation. The branch tree groups favorites, local branches and remotes; selected rows receive a soft blue fill. Branch rows reveal compact create, safe local delete and overflow buttons on hover, keyboard focus or selection. On narrow panels these actions sit below the name to keep it readable. Favorites use a gold branch symbol and are toggled in the row menu. Row menus use native top-layer popovers, support arrow/Home/End navigation and Escape, and close on outside click or branch-list scroll. They do not clip inside the branch pane. The duplicate action strip above the log appears only while the branch pane is hidden. Branch controls use authored SVG shapes and accessible button labels.
 
 **The Browse Before Checkout Rule.** Selecting a branch changes the history being browsed; checkout remains a separately labeled action.
 
@@ -133,7 +133,7 @@ Fix it prepares a reviewable request. In a matching thread, the user can add it 
 
 ### Dialogs and operation feedback
 
-Branch actions and Git/SSH prompts share native modal styling and explicit labels. Credential prompts use password inputs where required. Operation output stays in a compact bottom strip; merge recovery uses a muted amber banner and labeled actions.
+Branch actions and Git/SSH prompts share native modal styling and explicit labels. New branch offers HEAD and grouped local/remote sources; opening from a row preselects that branch, while opening from a commit preserves its revision. Delete confirmation focuses Cancel and uses Git's merged-history check; checked-out branches are protected. Credential prompts use password inputs where required. Operation output stays in a compact bottom strip; merge recovery uses a muted amber banner and labeled actions.
 
 ## Do's and Don'ts
 

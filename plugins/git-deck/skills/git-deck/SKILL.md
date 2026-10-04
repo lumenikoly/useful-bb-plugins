@@ -18,7 +18,9 @@ SSH config, keys, agent and credential helpers belong to the checkout's host.
 Users answer interactive authentication requests in BB dialogs. Never request
 passwords in chat, commands or remote URLs. OpenSSH BatchMode disables prompts.
 
-Pull is fast-forward-only from upstream. Push preserves the upstream branch on
+Fetch and Pull use `--prune` to remove stale remote-tracking references according
+to the remote's refspec. Pull is fast-forward-only from upstream. Push preserves
+the upstream branch on
 the selected remote, or establishes upstream for the current branch. Cancellation
 does not roll back completed operations. Check Git status after a worker restart.
 

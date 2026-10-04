@@ -1,7 +1,10 @@
 # Add Git Deck
 
 Git Deck adds a Git page and thread panel with a branch browser, commit graph,
-revision details, file diffs, staging, commits and Fetch/Pull/Push. Repository-local
+revision details, file diffs, staging, commits and Fetch/Pull/Push. Compact row
+actions offer branch creation, confirmed local deletion and a branch menu; the
+creation dialog includes a source selector. Fetch and Pull prune stale
+remote-tracking branches. Repository-local
 author and SSH settings use system Git and OpenSSH. An optional GitHub Actions
 view uses GitHub CLI to inspect failed jobs and prepare editable Fix it requests
 in BB's native composer.

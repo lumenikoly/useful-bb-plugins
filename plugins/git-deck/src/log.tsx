@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { experimental_Diff as Diff, useRpc } from "@get-bb/plugin-sdk/app";
 import type { Action, Branch, Commit, Inspection, Snapshot, Target, rpcContract } from "./contracts.ts";
 
@@ -7,7 +7,7 @@ const colors = ["#7c83db", "#48a87b", "#d69a48", "#c573bd", "#4ba5c5"];
 const date = (value: string) => new Date(value).toLocaleDateString("en-US", { day: "2-digit", month: "short" });
 const errorText = (e: unknown) => e instanceof Error ? e.message : String(e);
 
-export function Glyph({ name, filled = false }: { name: "branch" | "star" | "plus" | "pane" | "more" | "close" | "head" | "fetch" | "pull" | "push" | "refresh" | "settings"; filled?: boolean }) {
+export function Glyph({ name, filled = false }: { name: "branch" | "star" | "plus" | "trash" | "pane" | "more" | "close" | "head" | "fetch" | "pull" | "push" | "refresh" | "settings"; filled?: boolean }) {
   const paths = {
     fetch: <><path d="M5 13H4a3 3 0 0 1-.4-6A5 5 0 0 1 13 5a4 4 0 0 1 3 8h-1M10 9v8m-3-3 3 3 3-3" /></>,
     pull: <><path d="M10 2v11m-4-4 4 4 4-4M3 14v3h14v-3" /></>,
@@ -17,6 +17,7 @@ export function Glyph({ name, filled = false }: { name: "branch" | "star" | "plu
     branch: <><circle cx="5" cy="4" r="2" /><circle cx="5" cy="16" r="2" /><circle cx="15" cy="4" r="2" /><path d="M5 6v8M15 6v1a5 5 0 0 1-5 5H5" /></>,
     star: <path d="m10 2 2.5 5.1 5.6.8-4.1 4 1 5.6-5-2.6-5 2.6 1-5.6-4.1-4 5.6-.8Z" />,
     plus: <path d="M10 3v14M3 10h14" />,
+    trash: <><path d="M3 5h14M7 5V3h6v2M5 5l1 12h8l1-12M8 8v6M12 8v6" /></>,
     pane: <><rect x="2.5" y="3" width="15" height="14" rx="1.5" /><path d="M8 3v14M4.5 6h1.5M4.5 9h1.5" /></>,
     more: <><circle cx="4" cy="10" r="1" /><circle cx="10" cy="10" r="1" /><circle cx="16" cy="10" r="1" /></>,
     close: <path d="m5 5 10 10M15 5 5 15" />,
@@ -87,7 +88,10 @@ export function GitLog({ rpc, target, data, busy, start }: { rpc: Rpc; target: T
     }, (e) => { if (current) setPatchError(errorText(e)); });
     return () => { current = false; };
   }, [rpc, target.id, target.projectId, file, detail]);
-  function choose(value: string) { setRef(value); setLimit(100); setComparison(""); setSelected(""); }
+  function choose(value: string) {
+    if (value !== ref || limit !== 100) setSelected("");
+    setRef(value); setLimit(100); setComparison("");
+  }
   function favorite(value: string) {
     const next = favorites.includes(value) ? favorites.filter((v) => v !== value) : [...favorites, value];
     setFavorites(next); try { localStorage.setItem(favoritesKey, JSON.stringify(next)); } catch { /* optional */ }
@@ -96,12 +100,9 @@ export function GitLog({ rpc, target, data, busy, start }: { rpc: Rpc; target: T
     if (branch.remote) setDialog({ kind: "track", branch: branch.ref, name: branch.name.slice(branch.remote.length + 1) });
     else void start({ kind: "switch", branch: branch.name, create: false });
   }
-  const branchRow = (branch: Branch, favoriteRow = false) => <div className="git-tree-row" key={branch.ref} data-selected={ref === branch.ref}>
-    <button className="git-tree-name" title={`${branch.name}${branch.upstream ? ` → ${branch.upstream}` : ""}${branch.worktree ? `\nCheckout: ${branch.worktree}` : ""}`} onClick={() => choose(branch.ref)}>
-      <span className="git-branch-symbol" aria-hidden="true"><Glyph name={branch.current ? "head" : "branch"} /></span><span>{branch.remote && !favoriteRow ? branch.name.slice(branch.remote.length + 1) : branch.name}</span>{branch.current && <small>HEAD</small>}
-    </button>
-    <button className="git-favorite" aria-label={`${favorites.includes(branch.ref) ? "Remove from favorites" : "Add to favorites"}: ${branch.name}`} aria-pressed={favorites.includes(branch.ref)} onClick={() => favorite(branch.ref)}><Glyph name="star" filled={favorites.includes(branch.ref)} /></button>
-  </div>;
+  const branchRow = (branch: Branch, favoriteRow = false) => <BranchRow key={branch.ref} branch={branch} selected={ref === branch.ref} favorite={favorites.includes(branch.ref)} favoriteRow={favoriteRow} busy={busy} current={data.branch} canMerge={!data.unborn && !data.merging} canCompare={!data.unborn}
+    choose={() => choose(branch.ref)} checkout={() => checkout(branch)} toggleFavorite={() => favorite(branch.ref)} compare={() => { choose(branch.ref); setComparison(branch.ref); }}
+    create={() => setDialog({ kind: "create", branch: branch.ref, name: "" })} rename={() => setDialog({ kind: "rename", branch: branch.name, name: branch.name })} remove={() => setDialog({ kind: "delete", branch: branch.name, name: branch.name })} merge={() => setDialog({ kind: "merge", branch: branch.ref, name: branch.name })} />;
   const matches = (b: Branch) => b.name.toLowerCase().includes(branchQuery.toLowerCase());
   const visible = commits.map((c, i) => ({ c, i })).filter(({ c }) => `${c.subject} ${c.author} ${c.hash}`.toLowerCase().includes(query.toLowerCase()));
   return <div className="git-log-shell">
@@ -109,7 +110,7 @@ export function GitLog({ rpc, target, data, busy, start }: { rpc: Rpc; target: T
       <aside className="git-branches" aria-label="Branches">
         <div className="git-pane-heading"><strong>Branches</strong><button aria-label="Create branch" title="Create a branch from the selection" disabled={busy} onClick={() => setDialog({ kind: "create", branch: ref || "HEAD", name: "" })}><Glyph name="plus" /></button></div>
         <div className="git-search"><input aria-label="Search branches" placeholder="Find a branch…" value={branchQuery} onChange={(e) => setBranchQuery(e.target.value)} /></div>
-        <div className="git-branch-scroll">
+        <div className="git-branch-scroll" onScroll={(e) => e.currentTarget.querySelector<HTMLDivElement>(".git-row-menu:popover-open")?.hidePopover()}>
           <button className="git-tree-scope" aria-pressed={!ref} onClick={() => choose("")}><Glyph name="branch" /> <span>All branches</span><small>{data.refs.length}</small></button>
           <button className="git-tree-scope" aria-pressed={ref === "HEAD"} disabled={data.unborn} onClick={() => choose("HEAD")}><Glyph name="head" /> <span>HEAD <small>Current branch</small></span></button>
           {data.refs.some((b) => favorites.includes(b.ref) && matches(b)) && <details open className="git-tree-group"><summary>Favorites</summary>{data.refs.filter((b) => favorites.includes(b.ref) && matches(b)).map((b) => branchRow(b, true))}</details>}
@@ -125,7 +126,7 @@ export function GitLog({ rpc, target, data, busy, start }: { rpc: Rpc; target: T
           <input aria-label="Search commits" placeholder="Message, author or hash…" value={query} onChange={(e) => setQuery(e.target.value)} />
           <span className="git-log-filter" title={ref || "All branches"}>{selectedBranch?.name || ref || "All branches"}</span>{ref && <button aria-label="Clear branch filter" onClick={() => choose("")}><Glyph name="close" /></button>}
         </div>
-        <div className="git-branch-actions">
+        {selectedBranch && !showBranches && <div className="git-branch-actions">
           <span title={selectedBranch?.upstream || ""}>{selectedBranch?.current ? "Current branch" : selectedBranch?.remote ? "Remote branch" : selectedBranch ? "Local branch" : "Repository log"}</span>
           {selectedBranch && <>
             <button disabled={busy || selectedBranch.current || !!selectedBranch.worktree} title={selectedBranch.worktree ? `Already checked out: ${selectedBranch.worktree}` : "Check out this branch"} onClick={() => checkout(selectedBranch)}>Checkout</button>
@@ -135,7 +136,7 @@ export function GitLog({ rpc, target, data, busy, start }: { rpc: Rpc; target: T
               {!selectedBranch.remote && <><button disabled={busy || !!selectedBranch.worktree && !selectedBranch.current} onClick={(e) => { e.currentTarget.closest("details")?.removeAttribute("open"); setDialog({ kind: "rename", branch: selectedBranch.name, name: selectedBranch.name }); }}>Rename…</button><button disabled={busy || selectedBranch.current || !!selectedBranch.worktree} onClick={(e) => { e.currentTarget.closest("details")?.removeAttribute("open"); setDialog({ kind: "delete", branch: selectedBranch.name, name: selectedBranch.name }); }}>Delete local branch…</button></>}
             </div></details>
           </>}
-        </div>
+        </div>}
         <div className="git-log-columns"><span>Graph / Commit</span><span>Author</span><span>Date</span></div>
         <div className="git-log-scroll" aria-label="Commit log" aria-busy={loading}>
           {error ? <p className="git-error" role="alert">{error}</p> : !commits.length ? <div className="git-empty">{loading ? "Loading log…" : "No commits yet."}</div> : !visible.length ? <div className="git-empty">No matching commits in the loaded history.</div> : visible.map(({ c, i }) => <button key={c.hash} className="git-log-row" data-selected={selected === c.hash && !comparison} aria-pressed={selected === c.hash && !comparison} onClick={() => { setSelected(c.hash); setComparison(""); }}>
@@ -163,20 +164,66 @@ export function GitLog({ rpc, target, data, busy, start }: { rpc: Rpc; target: T
       </aside>
     </div>
     {file && <section className="git-log-diff"><div className="git-diff-heading"><span>{file.path} <small>{detail?.tip.slice(0, 8)}</small></span><div><button onClick={() => setSplit(!split)}>{split ? "Side by side" : "Unified"}</button><button aria-label="Close diff" onClick={() => setFile(null)}><Glyph name="close" /></button></div></div><div className="git-log-diff-content">{patchError ? <p className="git-error" role="alert">{patchError}</p> : patch === null ? <p className="git-empty">Loading diff…</p> : patch ? <Diff patch={patch} path={file.path} view={split ? "split" : "unified"} /> : <p className="git-empty">No text changes.</p>}</div></section>}
-    {dialog && <BranchDialog key={`${dialog.kind}:${dialog.branch}`} value={dialog} current={data.branch} close={() => setDialog(null)} submit={async (name) => {
-      const action: Action = dialog.kind === "create" || dialog.kind === "track" ? { kind: "branch-create", name, from: dialog.branch, track: dialog.kind === "track" } : dialog.kind === "rename" ? { kind: "branch-rename", branch: dialog.branch, name } : { kind: dialog.kind === "delete" ? "branch-delete" : "merge", branch: dialog.branch };
+    {dialog && <BranchDialog key={`${dialog.kind}:${dialog.branch}`} value={dialog} current={data.branch} branches={data.refs} close={() => setDialog(null)} submit={async (name, from) => {
+      const action: Action = dialog.kind === "create" || dialog.kind === "track" ? { kind: "branch-create", name, from, track: dialog.kind === "track" } : dialog.kind === "rename" ? { kind: "branch-rename", branch: dialog.branch, name } : { kind: dialog.kind === "delete" ? "branch-delete" : "merge", branch: dialog.branch };
       await start(action); setDialog(null);
     }} />}
   </div>;
 }
 
-function BranchDialog({ value, current, close, submit }: { value: { kind: string; branch: string; name: string }; current: string; close: () => void; submit: (name: string) => Promise<void> }) {
+function BranchRow({ branch, selected, favorite, favoriteRow, busy, current, canMerge, canCompare, choose, checkout, toggleFavorite, compare, create, rename, remove, merge }: {
+  branch: Branch; selected: boolean; favorite: boolean; favoriteRow: boolean; busy: boolean; current: string; canMerge: boolean; canCompare: boolean;
+  choose: () => void; checkout: () => void; toggleFavorite: () => void; compare: () => void; create: () => void; rename: () => void; remove: () => void; merge: () => void;
+}) {
+  const menuId = useId(), menu = useRef<HTMLDivElement>(null), trigger = useRef<HTMLButtonElement>(null);
+  const checkoutHint = branch.current ? "Current branch" : branch.worktree ? `Already checked out: ${branch.worktree}` : "Checkout";
+  const act = (action: () => void) => { menu.current?.hidePopover(); action(); };
+  return <div className="git-tree-row" data-selected={selected}>
+    <button className="git-tree-name" aria-pressed={selected} title={`${branch.name}${branch.upstream ? ` → ${branch.upstream}` : ""}${branch.worktree ? `\nCheckout: ${branch.worktree}` : ""}`} onClick={choose}>
+      <span className="git-branch-symbol" data-favorite={favorite}><Glyph name={favorite ? "star" : branch.current ? "head" : "branch"} filled={favorite} /></span><span>{branch.remote && !favoriteRow ? branch.name.slice(branch.remote.length + 1) : branch.name}</span>{branch.current && <small>HEAD</small>}
+    </button>
+    <div className="git-tree-actions">
+      <button aria-label={`Create branch from ${branch.name}`} title={`New branch from ${branch.name}…`} disabled={busy} onClick={create}><Glyph name="plus" /></button>
+      {!branch.remote && !branch.current && <button aria-label={`Delete branch ${branch.name}`} title={branch.worktree ? `Already checked out: ${branch.worktree}` : `Delete ${branch.name}…`} disabled={busy || !!branch.worktree} onClick={remove}><Glyph name="trash" /></button>}
+      <button ref={trigger} popoverTarget={menuId} aria-haspopup="menu" aria-label={`Actions for ${branch.name}`} title={`Actions for ${branch.name}`}><Glyph name="more" /></button>
+    </div>
+    <div ref={menu} id={menuId} popover="auto" role="menu" aria-label={`Actions for ${branch.name}`} className="git-row-menu" onToggle={(e) => {
+      if (e.newState !== "open" || !trigger.current) return;
+      const popup = e.currentTarget, anchor = trigger.current.getBoundingClientRect(), box = popup.getBoundingClientRect();
+      popup.style.left = `${Math.max(8, Math.min(anchor.right - box.width, window.innerWidth - box.width - 8))}px`;
+      popup.style.top = `${Math.max(8, Math.min(anchor.bottom + 4, window.innerHeight - box.height - 8))}px`;
+      popup.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus();
+    }} onKeyDown={(e) => {
+      if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) return;
+      e.preventDefault();
+      const items = [...e.currentTarget.querySelectorAll<HTMLButtonElement>("button:not(:disabled)")];
+      const index = items.indexOf(document.activeElement as HTMLButtonElement);
+      items[e.key === "Home" ? 0 : e.key === "End" ? items.length - 1 : (index + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length]?.focus();
+    }}>
+      <strong title={branch.name}>{branch.name}</strong>
+      <button role="menuitem" disabled={busy || branch.current || !!branch.worktree} title={checkoutHint} onClick={() => act(checkout)}>Checkout{branch.remote ? " as local branch…" : ""}</button>
+      <button role="menuitem" disabled={busy} onClick={() => act(create)}>New branch from here…</button>
+      {!branch.current && <><button role="menuitem" disabled={busy || !canMerge} onClick={() => act(merge)}>Merge into {current}…</button><button role="menuitem" disabled={!canCompare} onClick={() => act(compare)}>Compare with HEAD</button></>}
+      {!branch.remote && <><button role="menuitem" disabled={busy || !!branch.worktree && !branch.current} onClick={() => act(rename)}>Rename…</button><button role="menuitem" disabled={busy || branch.current || !!branch.worktree} onClick={() => act(remove)}>Delete local branch…</button></>}
+      <button role="menuitem" className="git-menu-favorite" onClick={() => act(toggleFavorite)}><Glyph name="star" filled={favorite} />{favorite ? "Remove from favorites" : "Add to favorites"}</button>
+    </div>
+  </div>;
+}
+
+function BranchDialog({ value, current, branches, close, submit }: { value: { kind: string; branch: string; name: string }; current: string; branches: Branch[]; close: () => void; submit: (name: string, from: string) => Promise<void> }) {
   const dialog = useRef<HTMLDialogElement>(null);
-  const [name, setName] = useState(value.name), [pending, setPending] = useState(false);
+  const [name, setName] = useState(value.name), [from, setFrom] = useState(value.branch), [pending, setPending] = useState(false), [error, setError] = useState("");
   useEffect(() => { dialog.current?.showModal(); return () => dialog.current?.close(); }, []);
   const editable = ["create", "track", "rename"].includes(value.kind);
   const title = value.kind === "create" ? "New branch" : value.kind === "track" ? "Checkout remote branch" : value.kind === "rename" ? "Rename branch" : value.kind === "delete" ? "Delete local branch?" : `Merge into ${current}`;
-  return <dialog ref={dialog} className="git-credential" aria-label={title} onCancel={close}><form onSubmit={(e) => { e.preventDefault(); setPending(true); void submit(name.trim()).finally(() => setPending(false)); }}><h2>{title}</h2><p className="git-prompt">{value.branch.replace(/^refs\/(heads|remotes)\//, "")}</p>{editable && <><label htmlFor="git-branch-name">Local branch name</label><input id="git-branch-name" autoFocus value={name} onChange={(e) => setName(e.target.value)} required maxLength={255} placeholder="feature/new-branch" /></>}
+  return <dialog ref={dialog} className="git-credential" aria-label={title} onCancel={(e) => { if (pending) e.preventDefault(); else close(); }}><form onSubmit={(e) => { e.preventDefault(); if (pending) return; setPending(true); setError(""); void submit(name.trim(), from).catch((e) => setError(errorText(e))).finally(() => setPending(false)); }}><h2>{title}</h2>{value.kind !== "create" && <p className="git-prompt">{value.branch.replace(/^refs\/(heads|remotes)\//, "")}</p>}{editable && <><label htmlFor="git-branch-name">Local branch name</label><input id="git-branch-name" autoFocus value={name} onChange={(e) => setName(e.target.value)} disabled={pending} required maxLength={255} placeholder="feature/new-branch" /></>}
+    {value.kind === "create" && <><label htmlFor="git-branch-from">Create from</label><select id="git-branch-from" value={from} onChange={(e) => setFrom(e.target.value)} disabled={pending}>
+      <option value="HEAD">HEAD — {current}</option>
+      {value.branch !== "HEAD" && !branches.some((b) => b.ref === value.branch) && <option value={value.branch}>Commit {value.branch.slice(0, 8)}</option>}
+      <optgroup label="Local branches">{branches.filter((b) => !b.remote).map((b) => <option key={b.ref} value={b.ref}>{b.name}</option>)}</optgroup>
+      <optgroup label="Remote branches">{branches.filter((b) => b.remote).map((b) => <option key={b.ref} value={b.ref}>{b.name}</option>)}</optgroup>
+    </select></>}
     <p className="git-muted">{value.kind === "delete" ? "Git will only delete the branch if its commits have been merged. The remote branch will remain on the server." : value.kind === "merge" ? "The selected branch will be merged into the current branch. If conflicts occur, you can complete or abort the merge in Changes." : value.kind === "track" ? "A local tracking branch will be created and checked out." : value.kind === "create" ? "A branch will be created from the selected revision and checked out." : "The new name applies to the local branch."}</p>
-    <div className="git-credential-actions"><button type="button" onClick={close} disabled={pending}>Cancel</button><button className="git-primary" disabled={pending || editable && !name.trim()}>{value.kind === "delete" ? "Delete" : value.kind === "merge" ? "Merge" : value.kind === "rename" ? "Rename" : "Create and checkout"}</button></div></form></dialog>;
+    {error && <p className="git-error" role="alert">{error}</p>}
+    <div className="git-credential-actions"><button type="button" autoFocus={!editable} onClick={close} disabled={pending}>Cancel</button><button className="git-primary" disabled={pending || editable && !name.trim()}>{pending ? "Starting…" : value.kind === "delete" ? "Delete" : value.kind === "merge" ? "Merge" : value.kind === "rename" ? "Rename" : "Create and checkout"}</button></div></form></dialog>;
 }

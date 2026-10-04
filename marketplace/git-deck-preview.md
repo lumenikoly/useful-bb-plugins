@@ -41,11 +41,14 @@ Git Deck opens as a dedicated BB page or a thread panel. Browse local and remote
 branches, star favorites and inspect a commit graph alongside changed files and
 diffs. Selecting a branch browses its history; checking it out is a separate
 action. Create branches from another branch or a commit, set up remote tracking,
-rename branches, delete merged local branches, and compare branch tips.
+rename branches, delete merged local branches, and compare branch tips. Compact
+row actions let you create from a branch or confirm a local deletion directly;
+the creation dialog also lets you choose the source branch.
 
 Stage selected files, review side-by-side or unified diffs, and commit the current
 index. Fetch, Push and fast-forward-only Pull use standard Git on the checkout's
-host. Merge a branch into the current branch, resolve conflicts in your editor,
+host. Fetch and Pull prune stale remote-tracking branches. Merge a branch into
+the current branch, resolve conflicts in your editor,
 then complete or abort the merge from the panel. Git hooks and signing settings
 continue to apply.
 
@@ -90,8 +93,3 @@ History loads in batches of 100, up to 1,000 commits. Search covers loaded histo
 Graph lines represent actual commit parents; a squash merge has no merge edge.
 Fix logs are capped at a 96,000-character tail. This release shows GitHub Actions;
 third-party CI checks and advanced Git operations remain outside the panel.
-
-## Submission files
-
-- [Marketplace entry](entries/git-deck.json)
-- [Proposed PR description](git-deck-submission.md)

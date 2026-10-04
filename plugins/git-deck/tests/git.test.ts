@@ -137,7 +137,7 @@ test("askpass: real OpenSSH encrypted key, UI job prompt, wrong reply ID and can
   } finally { await bridge?.dispose(); await harness.experimental_dispose(); await rm(dir, { recursive: true, force: true }); }
 });
 
-test("branches: remote tracking, log topology, revision diffs, safe deletion and merge recovery", async () => {
+test("branches: tracking and pruning, log topology, revision diffs, safe deletion and merge recovery", async () => {
   const dir = await mkdtemp(join(tmpdir(), "bb-git-deck-branches-"));
   const repo = join(dir, "repo"), bare = join(dir, "bare.git");
   const harness = experimental_createHostEntryHarness(host);
@@ -164,6 +164,14 @@ test("branches: remote tracking, log topology, revision diffs, safe deletion and
     await exec("git", ["init", "--bare", "--initial-branch=main", bare]);
     await git(repo, ["remote", "add", "origin", bare]);
     await run({ kind: "push", remote: "origin" });
+    await git(repo, ["branch", "stale", root.hash]);
+    await git(repo, ["push", "origin", "stale"]);
+    assert.ok((await harness.experimental_call("snapshot", { path: repo })).refs.some((b) => b.name === "origin/stale"));
+    await git(bare, ["update-ref", "-d", "refs/heads/stale"]);
+    await run({ kind: "fetch", remote: "origin" });
+    const pruned = await harness.experimental_call("snapshot", { path: repo });
+    assert.equal(pruned.refs.some((b) => b.name === "origin/stale"), false);
+    assert.ok(pruned.refs.some((b) => b.name === "stale" && !b.remote));
     await run({ kind: "branch-create", name: "feature/track", from: "refs/remotes/origin/main", track: true });
     let state = await harness.experimental_call("snapshot", { path: repo });
     assert.equal(state.upstream, "origin/main");
@@ -176,6 +184,11 @@ test("branches: remote tracking, log topology, revision diffs, safe deletion and
     assert.equal(comparison.base, root.hash);
     assert.equal(comparison.files[0].path, "file.txt");
     await commit("main\n", "Main");
+    await run({ kind: "branch-create", name: "feature/from-other", from: "refs/heads/feature/work", track: false });
+    state = await harness.experimental_call("snapshot", { path: repo });
+    assert.equal(state.refs.find((b) => b.current)?.hash, comparison.tip);
+    assert.equal(state.upstream, "");
+    await run({ kind: "switch", branch: "main", create: false });
     await run({ kind: "merge", branch: "refs/heads/feature/work" }, "failed");
     state = await harness.experimental_call("snapshot", { path: repo });
     assert.equal(state.merging, true);
@@ -194,6 +207,7 @@ test("branches: remote tracking, log topology, revision diffs, safe deletion and
     assert.equal(merge.files[0].path, "file.txt");
     await git(repo, ["branch", "--unset-upstream", "feature/work"]);
     await run({ kind: "branch-delete", branch: "feature/work" });
+    await run({ kind: "branch-delete", branch: "feature/from-other" });
     assert.equal((await harness.experimental_call("snapshot", { path: repo })).refs.some((b) => b.name === "feature/work"), false);
   } finally { await harness.experimental_dispose(); await rm(dir, { recursive: true, force: true }); }
 });

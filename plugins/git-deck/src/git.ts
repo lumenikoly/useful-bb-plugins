@@ -125,12 +125,12 @@ export async function perform(path: string, action: Action, options: Parameters<
       await run(head.code === 0 ? ["reset", "--quiet", "HEAD", "--", ...paths] : ["rm", "--cached", "--quiet", "--", ...paths]);
     }
   } else if (action.kind === "commit") await run(["commit", "-m", action.message]);
-  else if (action.kind === "pull") await run(["pull", "--ff-only"]);
+  else if (action.kind === "pull") await run(["pull", "--ff-only", "--prune"]);
   else if (action.kind === "fetch" || action.kind === "push" || action.kind === "remote") {
     const names = (await git(path, ["remote"], { signal: options?.signal })).stdout.split(/\r?\n/);
     if (!names.includes(action.remote)) throw new Error("Remote not found. Refresh the list.");
     if (action.kind === "remote") await run(["remote", "set-url", "--", action.remote, action.url]);
-    else if (action.kind === "fetch") await run(["fetch", "--", action.remote]);
+    else if (action.kind === "fetch") await run(["fetch", "--prune", "--", action.remote]);
     else {
       const branch = await git(path, ["symbolic-ref", "--quiet", "--short", "HEAD"], { signal: options?.signal, allowed: [0, 1] });
       if (!branch.stdout.trim()) throw new Error("Check out a branch before pushing.");

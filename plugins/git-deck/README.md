@@ -40,9 +40,14 @@ Package: `bb-plugin-git-deck`. Plugin ID: `git-deck`. Releases use the
 and star favorites. Selecting a branch filters its history; **Checkout** is an
 explicit action.
 
-- Create and check out a branch from a selected branch or commit.
+- Use the row's **+** to create a branch from it, or choose HEAD, a local branch,
+  or a remote branch in **New branch → Create from**. A selected commit is also
+  available when opening the dialog from commit details.
 - Check out a remote branch by creating a local tracking branch.
-- Rename branches or delete local branches with Git's merged-history check.
+- Delete a local branch using the row's trash button and confirmation dialog.
+  Git protects unmerged commits; current branches and branches checked out in
+  another worktree cannot be deleted. The row's **…** menu includes Checkout,
+  Rename, Merge, Compare and Favorites.
 - Merge the selected branch into the current branch; a clean checkout is required.
 - Compare branch tips with **Compare with HEAD** and inspect changed files.
 
@@ -68,8 +73,9 @@ terminal or another IDE. Git hooks and commit signing run through system Git;
 GPG and pinentry remain system-managed.
 
 The toolbar provides Fetch, Pull, Push, Refresh and the **Account and SSH** gear.
-Fetch uses the selected remote. Pull is fast-forward-only and follows the current
-upstream. Push preserves an upstream destination on the selected remote; without
+Fetch uses the selected remote. Fetch and Pull prune stale remote-tracking
+branches using Git's standard `--prune` behavior. Pull is fast-forward-only and
+follows the current upstream. Push preserves an upstream destination on the selected remote; without
 one, it sets upstream for the current branch. Force push, rebase, cherry-pick and
 remote branch deletion remain available through your Git terminal.
 

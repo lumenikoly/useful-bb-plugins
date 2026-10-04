@@ -6,9 +6,12 @@ Initial release as **Git Deck**. Plugin ID: `git-deck`.
 
 - Dedicated page and thread panel with a branch browser, commit graph and revision inspector.
 - Local and remote branches, search, favorites, tracking checkout, branch creation, rename and safe local deletion.
+- Compact branch-row actions and a source-branch selector in the creation dialog.
+- Branch menus support keyboard navigation; narrow panels preserve branch names,
+  and reselecting a branch preserves its commit details.
 - Merge, conflict recovery and abort, branch-tip comparisons, and commit file diffs.
 - File selection, staging, unstaging, commits, and side-by-side or unified diffs.
-- Fetch, fast-forward-only Pull and regular Push using standard Git commands.
+- Fetch and fast-forward-only Pull prune stale remote-tracking branches; regular Push uses standard Git commands.
 - Repository-specific author identity and SSH command settings, system SSH aliases, keys, agent and credential helpers.
 - Interactive passwords, passphrases and SSH host-key confirmation; guidance for HTTPS remotes.
 - GitHub Actions runs, jobs, failed steps and logs through GitHub CLI.
