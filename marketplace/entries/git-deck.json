@@ -1,0 +1,37 @@
+{
+  "id": "git-deck",
+  "displayName": "Git Deck",
+  "description": "Review branches and changes, commit your work, and sync repositories without leaving BB. Browse commit graphs and diffs, with separate author and SSH settings for each repository. Inspect failed GitHub Actions and prepare a Fix it request for an agent to review. Requires Git and OpenSSH on Linux or macOS; GitHub checks additionally require GitHub CLI and a GitHub account.",
+  "icon": "GitBranch",
+  "category": "code-and-reviews",
+  "tags": [
+    "git",
+    "branches",
+    "commits",
+    "diffs",
+    "staging",
+    "ssh",
+    "github-actions",
+    "ci",
+    "worktrees"
+  ],
+  "author": {
+    "name": "lumenikoly",
+    "github": "lumenikoly",
+    "url": "https://github.com/lumenikoly"
+  },
+  "source": {
+    "git": {
+      "url": "https://github.com/lumenikoly/useful-bb-plugins.git",
+      "subdir": "plugins/git-deck",
+      "range": "^0.1.0",
+      "tagPrefix": "git-deck-"
+    }
+  },
+  "screenshots": [
+    "./screenshots/git-deck/log.png",
+    "./screenshots/git-deck/changes.png",
+    "./screenshots/git-deck/checks.png"
+  ],
+  "overview": "./overview/git-deck.md"
+}

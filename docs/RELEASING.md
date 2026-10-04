@@ -88,3 +88,36 @@ workflow создаёт только черновик GitHub Release.
 Укажите MIT и метаданные этого репозитория в manifest нового пакета,
 скопируйте в него корневой LICENSE. Общий CI обрабатывает все workspace-пакеты;
 release workflow выбирает пакет по тегу.
+
+## Git Deck 0.1.0
+
+Git Deck uses plugin ID `git-deck`, package `bb-plugin-git-deck` and directory
+`plugins/git-deck`. Its tag prefix is `git-deck-`, independent of Project Themes.
+
+Check the release package from the repository root:
+
+```sh
+npm run typecheck --workspace=bb-plugin-git-deck
+npm test --workspace=bb-plugin-git-deck
+npm run build --workspace=bb-plugin-git-deck
+npm pack --workspace=bb-plugin-git-deck --dry-run --ignore-scripts
+node scripts/release-info.mjs git-deck-v0.1.0
+```
+
+Commit the reviewed release files. After approval for the exact release commit,
+push that commit to `main`, create the immutable `git-deck-v0.1.0` tag on it and push
+the tag. The existing release workflow builds `bb-plugin-git-deck`, packages it and
+creates a draft GitHub Release. Review the archive and publish the draft.
+
+The Community marketplace payload is `marketplace/entries/git-deck.json`,
+`marketplace/overview/git-deck.md` and `marketplace/screenshots/git-deck/`. Its source
+tracks `^0.1.0` with `tagPrefix: git-deck-`. Copy these files into a current
+`get-bb/marketplace` checkout, then run its build and check scripts. The proposed
+PR body is `marketplace/git-deck-submission.md`. Show the complete entry, screenshots,
+release source and PR text to the owner before creating the submission PR.
+
+After the release tag is public:
+
+```sh
+bb plugin install git:https://github.com/lumenikoly/useful-bb-plugins.git@^0.1.0 --plugin git-deck --tag-prefix git-deck-
+```

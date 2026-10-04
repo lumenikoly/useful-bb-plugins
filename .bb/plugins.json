@@ -8,8 +8,8 @@
       "source": "./plugins/project-themes"
     },
     {
-      "name": "git",
-      "source": "./plugins/git"
+      "name": "git-deck",
+      "source": "./plugins/git-deck"
     },
     {
       "name": "thread-overview",

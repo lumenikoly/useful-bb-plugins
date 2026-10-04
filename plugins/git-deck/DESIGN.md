@@ -1,5 +1,5 @@
 ---
-name: BB Git
+name: Git Deck
 description: Native BB Git tool window with an IntelliJ IDEA Git Log composition.
 colors:
   log-selection: "color-mix(in srgb, #578bea 17%, var(--background))"
@@ -53,13 +53,13 @@ components:
     padding: "8px 10px"
 ---
 
-# Design System: BB Git
+# Design System: Git Deck
 
 ## Overview
 
 **Creative North Star: "BB's native Git workspace"**
 
-BB's native Git tool window follows the user-pinned IntelliJ IDEA Git Log reference: a branch browser, an actual parent graph and a revision inspector. The dense, flat workspace inherits BB's theme and font, using restrained blue selection and small colored graph lanes to organize repository history. Log, Changes and Account are separate tabs.
+BB's native Git tool window follows the user-pinned IntelliJ IDEA Git Log reference: a branch browser, an actual parent graph and a revision inspector. The dense, flat workspace inherits BB's theme and font, using restrained blue selection and small colored graph lanes to organize repository history. Log, Changes and Checks are separate tabs. Checks extends this tool window with a compact workflow-run browser and diagnostics pane; Account remains accessible through the toolbar gear.
 
 **Key Characteristics:**
 
@@ -89,13 +89,15 @@ The host font is inherited throughout this utility interface. The compact body i
 
 ## Layout
 
-Project and checkout selectors, a wrapping network toolbar and the Log / Changes / Account tab strip precede the workspace. The desktop Log grid is `minmax(190px, 21%) minmax(280px, 1fr) minmax(220px, 26%)`: branch browser left, graph log middle, changed files and commit details right. Each pane scrolls independently. The branch-pane toggle gives the log more room. Selecting a revision file opens the host Diff renderer in a lower panel (42% height, minimum 180px).
+Project and checkout selectors, a wrapping network toolbar and the Log / Changes / Checks tab strip precede the workspace. The desktop Log grid is `minmax(190px, 21%) minmax(280px, 1fr) minmax(220px, 26%)`: branch browser left, graph log middle, changed files and commit details right. Each pane scrolls independently. The branch-pane toggle gives the log more room. Selecting a revision file opens the host Diff renderer in a lower panel (42% height, minimum 180px).
 
 Log responsiveness follows the tool window's container width. At (1050px), pane widths tighten and author columns disappear. At (780px), branches occupy the left column and the revision inspector moves below the log; inspector files and details sit side by side. At (520px), the branch column narrows to (128px), date columns and reference badges hide, and inspector files and details stack. The branch toggle remains available.
 
 Changes retains its own files/commit and Diff split: `minmax(230px, 30%) minmax(0, 1fr)`. Viewport media queries tighten that split at (760px) and stack it at (520px). Account content scrolls and caps at (650px). Compact spacing repeats around controls and dividers; log rows are (32px) high.
 
 Branch-action and credential dialogs share a centered native modal, capped at (460px), with (16px) viewport margins and internal scrolling. Toolbar and dialog actions wrap.
+
+Checks uses a two-pane grid, `minmax(230px, 34%) minmax(0, 1fr)`: recent workflow runs left and selected-run diagnostics right, each scrolling independently. At container width (780px), the run column tightens to `minmax(170px, 32%)` and row status moves below the workflow name. At (520px), the panes stack, the run list caps at (220px), and the detail joins the shared scroll flow.
 
 ## Elevation & Depth
 
@@ -123,6 +125,12 @@ Commit rows align subject/graph, author and date in a dense grid. Small bordered
 
 **The Parent Graph Rule.** Draw graph connections from commit parent hashes; when text filtering hides intervening commits, show dots without connecting lines.
 
+### Checks and fix handoff
+
+Workflow rows remain flat, full-width and border-separated. Selected runs reuse the muted blue log selection; workflow names lead, secondary titles truncate, and hashes/dates use compact metadata. Text and SVG status cues accompany failures in the host error color; successful and pending states retain host foreground. The detail pane exposes jobs, failed steps and explicit View logs / Fix it actions. Logs use wrapping monospace text on a muted surface, with bounded scrolling.
+
+Fix it prepares a reviewable request. In a matching thread, the user can add it to the existing composer or open a new chat. New-chat navigation uses BB's main composer and seeds the project and managed-worktree selection through public `setSelection`. The failed branch supplies context; the agent checks the exact checkout commit before applying a fix. A small bare banner shows branch/hash and selection progress or errors. The user reviews the workspace and sends manually; branch mismatch and older-run notices remain visible beside diagnostics.
+
 ### Dialogs and operation feedback
 
 Branch actions and Git/SSH prompts share native modal styling and explicit labels. Credential prompts use password inputs where required. Operation output stays in a compact bottom strip; merge recovery uses a muted amber banner and labeled actions.
@@ -146,6 +154,6 @@ Branch actions and Git/SSH prompts share native modal styling and explicit label
 
 Fetch, Pull, Push and refresh use the shared 15px SVG family in 30px buttons,
 with native tooltips and accessible names. A divider separates the Account/SSH
-gear; its pressed state marks the settings view. Only Log and Changes remain
+gear; its pressed state marks the settings view. Log, Changes and Checks remain
 in the tab strip. At narrow widths the upstream text hides; full tracking
 information remains in the branch browser footer.

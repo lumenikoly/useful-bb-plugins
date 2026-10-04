@@ -52,6 +52,7 @@ export default experimental_defineHostEntry({
       const timeout = setTimeout(stop, 600_000);
       void (async () => {
         let bridge: Awaited<ReturnType<typeof createAskpass>> | undefined;
+        let state: Job["state"] = "done";
         try {
           if (["push", "pull", "fetch", "commit", "merge", "merge-continue"].includes(action.kind)) {
             bridge = await createAskpass((text, confirm) => new Promise((reply) => {
@@ -65,10 +66,9 @@ export default experimental_defineHostEntry({
           await perform(root, action, { signal: abort.signal, env: bridge?.env,
             onOutput: (s) => { view.output = (view.output + s).slice(-262144); },
           });
-          view.state = "done";
           if (!view.output) view.output = "Done.";
         } catch (error) {
-          view.state = abort.signal.aborted ? "cancelled" : "failed";
+          state = abort.signal.aborted ? "cancelled" : "failed";
           view.output = (view.output + "\n" + (error instanceof Error ? error.message : String(error))).slice(-262144);
         } finally {
           job.reply?.(null);
@@ -79,6 +79,7 @@ export default experimental_defineHostEntry({
             clearTimeout(timeout);
             context.lifecycle.signal.removeEventListener("abort", stop);
             locks.delete(lock);
+            view.state = state;
             job.finished = Date.now();
             lease.dispose();
           }

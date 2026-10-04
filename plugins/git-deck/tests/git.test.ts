@@ -29,7 +29,7 @@ async function until(harness: ReturnType<typeof experimental_createHostEntryHarn
 }
 
 test("real repositories: literal staging, unborn unstage, rename, accounts and push/pull", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "bb-git-test-"));
+  const dir = await mkdtemp(join(tmpdir(), "bb-git-deck-test-"));
   const repo = join(dir, "repo"), other = join(dir, "other"), bare = join(dir, "bare.git");
   const harness = experimental_createHostEntryHarness(host);
   const run = async (path: string, action: Action) => {
@@ -100,7 +100,7 @@ test("real repositories: literal staging, unborn unstage, rename, accounts and p
 });
 
 test("askpass: real OpenSSH encrypted key, UI job prompt, wrong reply ID and cancellation", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "bb-git-auth-"));
+  const dir = await mkdtemp(join(tmpdir(), "bb-git-deck-auth-"));
   const fixture = "fixture-only-passphrase";
   const harness = experimental_createHostEntryHarness(host);
   const abort = new AbortController();
@@ -138,7 +138,7 @@ test("askpass: real OpenSSH encrypted key, UI job prompt, wrong reply ID and can
 });
 
 test("branches: remote tracking, log topology, revision diffs, safe deletion and merge recovery", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "bb-git-branches-"));
+  const dir = await mkdtemp(join(tmpdir(), "bb-git-deck-branches-"));
   const repo = join(dir, "repo"), bare = join(dir, "bare.git");
   const harness = experimental_createHostEntryHarness(host);
   const run = async (action: Action, expected = "done") => {

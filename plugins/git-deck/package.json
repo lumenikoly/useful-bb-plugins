@@ -1,5 +1,5 @@
 {
-  "name": "bb-plugin-git",
+  "name": "bb-plugin-git-deck",
   "version": "0.1.0",
   "type": "module",
   "engines": {
@@ -8,8 +8,8 @@
     "node": ">=22.18.0"
   },
   "bb": {
-    "name": "Git",
-    "description": "Git in BB: branches, commits, push/pull and per-project accounts.",
+    "name": "Git Deck",
+    "description": "Review branches and changes, commit and sync repositories, and turn failed GitHub Actions into fix requests.",
     "branding": {
       "icon": "GitBranch"
     },
@@ -58,10 +58,10 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lumenikoly/useful-bb-plugins.git",
-    "directory": "plugins/git"
+    "directory": "plugins/git-deck"
   },
-  "homepage": "https://github.com/lumenikoly/useful-bb-plugins/tree/main/plugins/git#readme",
-  "description": "Git in BB: branches, commits, push/pull and per-project accounts.",
+  "homepage": "https://github.com/lumenikoly/useful-bb-plugins/tree/main/plugins/git-deck#readme",
+  "description": "Review branches and changes, commit and sync repositories, and turn failed GitHub Actions into fix requests.",
   "bugs": {
     "url": "https://github.com/lumenikoly/useful-bb-plugins/issues"
   }

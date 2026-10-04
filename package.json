@@ -13,7 +13,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "dev:project-themes": "npm run dev --workspace=bb-plugin-project-themes",
-    "dev:git": "npm run dev --workspace=bb-plugin-git"
+    "dev:git-deck": "npm run dev --workspace=bb-plugin-git-deck"
   },
   "devDependencies": {
     "bb-app": "0.45.0"

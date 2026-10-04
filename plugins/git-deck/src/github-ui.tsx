@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { experimental_Icon as Icon, experimental_NewThreadComposer as NewThreadComposer, useBbNavigate, useComposers, useRpc, useSdk } from "@get-bb/plugin-sdk/app";
+import { experimental_Icon as Icon, useBbNavigate, useComposer, useComposers, useRpc, useSdk } from "@get-bb/plugin-sdk/app";
 import type { GithubDetail, GithubRun, GithubState, Target, rpcContract } from "./contracts.ts";
 import { Glyph } from "./log.tsx";
 
@@ -8,6 +8,36 @@ const errorText = (e: unknown) => e instanceof Error ? e.message : String(e);
 const failing = (s: string) => ["failure", "timed_out", "action_required", "startup_failure"].includes(s);
 const status = (s: string, conclusion: string) => (conclusion || s).replaceAll("_", " ");
 const date = (s: string) => new Date(s).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+
+// One navigation handoff in this client. It holds only workspace metadata.
+let fixChat: { projectId: string; hostId: string; branch: string; head: string; selection?: ReturnType<ReturnType<typeof useComposer>["setSelection"]> } | null = null;
+function openFixChat(target: Target, fix: { prompt: string; branch: string; head: string }, navigate: ReturnType<typeof useBbNavigate>) {
+  fixChat = { projectId: target.projectId, hostId: target.hostId, branch: fix.branch, head: fix.head };
+  navigate.toCompose({ initialPrompt: `Project: @project:${target.projectId}\n\n${fix.prompt}`, focusPrompt: true });
+}
+
+export function FixChatSetup() {
+  const composer = useComposer();
+  const [error, setError] = useState("");
+  const [ready, setReady] = useState(false);
+  const request = fixChat;
+  useEffect(() => {
+    if (!request || !composer.text.includes(request.head)) return;
+    let current = true;
+    request.selection ??= composer.setSelection({ projectId: request.projectId, environment: { type: "host", hostId: request.hostId,
+      workspace: { type: "managed-worktree", baseBranch: { kind: "named", name: request.branch } } } });
+    void request.selection.then((selection) => {
+      if (!current) return;
+      if (selection.projectId !== request.projectId) setError("Select the project containing this check before sending.");
+      setReady(true);
+    }, (e) => { if (current) { setError(errorText(e)); setReady(true); } });
+    return () => { current = false; };
+  }, [composer, composer.text, request]);
+  useEffect(() => composer.onSubmitted(() => { if (fixChat === request) fixChat = null; }), [composer, request]);
+  if (!request || !composer.text.includes(request.head)) return null;
+  return <div className="git-fix-chat-context"><strong>Fix GitHub check</strong><span>{request.branch} · {request.head.slice(0, 7)}</span>
+    {error ? <p role="alert">{error}</p> : <p>{ready ? "Review the request and workspace, then send." : "Selecting project and worktree…"}</p>}</div>;
+}
 
 function useGithub(rpc: Rpc, target: Target, remote: string) {
   const [data, setData] = useState<GithubState | null>(null), [error, setError] = useState(""), [pending, setPending] = useState(false);
@@ -63,7 +93,6 @@ export function GithubChecks({ rpc, target, remote, revision, threadId, openAcco
   const [logs, setLogs] = useState<{ text: string; truncated: boolean } | null>(null), [logJob, setLogJob] = useState<number | null>(null);
   const [operation, setOperation] = useState<"logs" | "fix" | null>(null), [actionError, setActionError] = useState("");
   const [fix, setFix] = useState<{ prompt: string; branch: string; head: string } | null>(null);
-  const [fixJob, setFixJob] = useState<number | null>(null);
   const ticket = useRef(0), alive = useRef(true), operationTicket = useRef(0);
   const navigate = useBbNavigate(), sdk = useSdk(), composers = useComposers();
   const currentComposer = composers.find((c) => c.scope.kind === "thread" && c.scope.threadId === threadId);
@@ -94,7 +123,11 @@ export function GithubChecks({ rpc, target, remote, revision, threadId, openAcco
         if (alive.current && n === operationTicket.current) { setLogs(result); setLogJob(jobId); setFix(null); }
       } else {
         const result = await rpc.call("githubFix", { ...args, head: data.head });
-        if (alive.current && n === operationTicket.current) { setFix(result); setFixJob(jobId); setLogs(null); }
+        if (alive.current && n === operationTicket.current) {
+          setLogs(null);
+          if (currentComposer) setFix(result);
+          else openFixChat(target, result, navigate);
+        }
       }
     } catch (e) { if (alive.current && n === operationTicket.current) setActionError(errorText(e)); }
     finally { if (alive.current && n === operationTicket.current) setOperation(null); }
@@ -104,10 +137,9 @@ export function GithubChecks({ rpc, target, remote, revision, threadId, openAcco
   const failures = runs.filter((r) => r.headSha === data?.head && failing(r.conclusion)).length;
   const connectionError = error || data?.error;
   return <div className="git-checks-shell">
-    <div className="git-checks-toolbar"><Icon name="Github" className="git-icon" /><strong>{data?.repository || "GitHub Actions"}</strong>
-      {data?.branch && <span className="git-muted">{data.branch}</span>}{failures > 0 && <span className="git-check-failures">{failures} failed</span>}
+    <div className="git-checks-toolbar"><Icon name="Github" className="git-icon" /><strong title={`GitHub account: ${data?.account || data?.activeAccount || "gh default"}`}>{data?.repository || "GitHub Actions"}</strong>
+      {failures > 0 && <span className="git-check-failures">{failures} failed</span>}
       <span className="git-checks-toolbar-spacer" />
-      <button className="git-icon-button" aria-label="GitHub account settings" title={`GitHub account: ${data?.account || data?.activeAccount || "gh default"}`} onClick={openAccount}><Glyph name="settings" /></button>
       <button className="git-icon-button" aria-label="Refresh checks" title="Refresh checks" disabled={pending || !remote || !!operation} onClick={() => { setDetailRevision((v) => v + 1); void refresh(); }}><Glyph name="refresh" /></button>
     </div>
     {!remote ? <div className="git-empty"><Icon name="Github" className="git-empty-icon" /><p>Add a GitHub remote to view workflow checks.</p><button onClick={openAccount}>Set up remote</button></div>
@@ -134,13 +166,13 @@ export function GithubChecks({ rpc, target, remote, revision, threadId, openAcco
                 {failing(j.conclusion) && <div className="git-check-job-actions"><button disabled={!!operation} onClick={() => void diagnostics("logs", j.databaseId)}>View logs</button><button className="git-primary" disabled={!!operation || !current} title={current ? "Prepare a fix request with this job’s diagnostics" : "Switch to the failed branch"} onClick={() => void diagnostics("fix", j.databaseId)}><Icon name="WandSparkles" className="git-icon" />Fix it</button></div>}
               </section>)}
             </div>
-            {failing(detail.run.conclusion) && <div className="git-check-run-actions"><button disabled={!!operation} onClick={() => void diagnostics("logs", null)}>View all failed logs</button><button disabled={!!operation || !current} onClick={() => void diagnostics("fix", null)}>Fix failed checks</button></div>}
+            {failing(detail.run.conclusion) && detail.jobs.filter((j) => failing(j.conclusion)).length !== 1 && <div className="git-check-run-actions"><button disabled={!!operation} onClick={() => void diagnostics("logs", null)}>View all failed logs</button><button disabled={!!operation || !current} onClick={() => void diagnostics("fix", null)}>Fix failed checks</button></div>}
             {operation && <p className="git-muted" role="status">{operation === "fix" ? "Preparing fix request…" : "Loading failed-step logs…"}</p>}
             {actionError && <p className="git-error" role="alert">{actionError}</p>}
             {logs && <section className="git-check-logs"><div className="git-check-pane-heading"><strong>{logJob ? detail.jobs.find((j) => j.databaseId === logJob)?.name : "Failed steps"}</strong><button className="git-icon-button" aria-label="Close logs" onClick={() => setLogs(null)}><Glyph name="close" /></button></div>{logs.truncated && <p className="git-muted">Showing the last 96,000 characters. Open GitHub for complete logs.</p>}<pre>{logs.text || "No failed-step logs were returned. See job status or open the workflow on GitHub."}</pre></section>}
             {fix && <section className="git-check-fix"><div className="git-check-pane-heading"><strong>Fix failed check</strong><button className="git-icon-button" aria-label="Close fix request" onClick={() => setFix(null)}><Glyph name="close" /></button></div>
-              <p className="git-muted">Review the request, agent and workspace, then send. A new thread uses an isolated worktree by default.</p>
-              {currentComposer && <button onClick={async () => {
+              <p className="git-muted">The request is ready. Add it to this chat or review it in a new chat before sending.</p>
+              {currentComposer && <button className="git-primary" onClick={async () => {
                 try {
                   const thread = await sdk.threads.get({ threadId: threadId! });
                   if (thread.projectId !== target.projectId || !thread.environmentId) throw new Error("This chat belongs to a different checkout. Use the new-thread composer below.");
@@ -149,18 +181,8 @@ export function GithubChecks({ rpc, target, remote, revision, threadId, openAcco
                   currentComposer.insert(fix.prompt, { at: "end" }); currentComposer.focus(); setFix(null);
                 } catch (e) { setActionError(errorText(e)); }
               }}>Add to current chat</button>}
-              <NewThreadComposer key={`${detail.run.databaseId}:${detail.run.attempt}:${fix.head}:${fixJob}`} draftKey={`git-fix:${target.projectId}:${detail.run.databaseId}:${detail.run.attempt}:${fix.head}:${fixJob}`} defaultProjectId={target.projectId}
-                defaultEnvironment={{ type: "host", hostId: target.hostId, workspace: { type: "managed-worktree", baseBranch: { kind: "named", name: fix.branch } } }}
-                initialPrompt={fix.prompt} layout="document" onSubmit={async (request) => {
-                  if (request.projectId !== target.projectId) throw new Error("Choose the project containing this failed check.");
-                  const latest = await rpc.call("github", input);
-                  if (latest.error) throw new Error(`Cannot verify this check before sending: ${latest.error}`);
-                  if (latest.head !== fix.head || latest.branch !== fix.branch) throw new Error("The checkout changed. Refresh Checks and prepare the request again.");
-                  const latestRun = latest.runs.find((r) => r.databaseId === detail.run.databaseId);
-                  if (!latestRun || latestRun.attempt !== detail.run.attempt || !failing(latestRun.conclusion)) throw new Error("This workflow changed. Refresh Checks and prepare the request again.");
-                  const t = await sdk.threads.spawn({ ...request, title: `Fix ${detail.run.workflowName || "GitHub check"}` });
-                  navigate.toThread(t.id);
-                }} />
+              <button onClick={() => openFixChat(target, fix, navigate)}>Open in new chat</button>
+              <details className="git-check-request"><summary>Review request</summary><pre>{fix.prompt}</pre></details>
             </section>}
           </>}
         </main>

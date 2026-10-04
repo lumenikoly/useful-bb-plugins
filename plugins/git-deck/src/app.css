@@ -316,3 +316,11 @@
   .git-checks-toolbar > strong { max-width: calc(100% - 110px); }
   .git-check-job-actions > button { min-height: 36px; }
 }
+.git-check-request { margin: 12px 16px; }
+.git-check-request summary { cursor: pointer; padding: 6px 0; color: var(--muted-foreground); }
+.git-check-request pre { max-height: 320px; margin: 8px 0; padding: 12px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--muted); font: 11px/1.6 monospace; }
+.git-fix-chat-context { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; padding: 10px 0; color: var(--foreground); font-size: 12px; }
+.git-fix-chat-context strong { font-weight: 550; }
+.git-fix-chat-context span, .git-fix-chat-context p { color: var(--muted-foreground); }
+.git-fix-chat-context p { flex-basis: 100%; margin: 0; line-height: 1.5; }
+.git-fix-chat-context p[role=alert] { color: var(--destructive-text, var(--destructive)); }

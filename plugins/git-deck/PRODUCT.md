@@ -1,4 +1,4 @@
-# Git для BB
+# Git Deck for BB
 
 <!-- impeccable:product-schema 1 -->
 
@@ -18,6 +18,11 @@ merge/recovery, branch comparison, staging, commits, fetch/pull/push and reposit
 standard Git commands. The user explicitly requested IntelliJ IDEA's Git workflow
 as the reference, system SSH configuration and interactive password entry.
 
+Integrate GitHub Actions through GitHub CLI on the checkout host: browse workflow
+runs, inspect failed jobs, steps and logs, and prepare a fix request in native BB
+chat with the project and worktree selection seeded. The user reviews and sends
+the draft.
+
 ## Constraints
 
 Keep the implementation simple. Use the current public BB SDK, the host-owned
@@ -25,6 +30,8 @@ diff renderer and standard Git/OpenSSH. Avoid extra tests and dependencies.
 Author identity is local to the Git repository; SSH identity follows its remote
 alias or local SSH command. Passwords are entered on demand and not stored by
 the plugin. Rebase, cherry-pick, force operations and remote branch deletion remain in the terminal.
+GitHub account selection is repository-specific; authentication tokens stay in
+GitHub CLI credential storage, independent of Git author and SSH configuration.
 
 ## Visual commitment
 

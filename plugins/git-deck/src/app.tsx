@@ -3,7 +3,7 @@ import { definePluginApp, experimental_Diff as Diff, experimental_Icon as Icon, 
 import type { Action, Change, Job, Snapshot, Target, rpcContract } from "./contracts.ts";
 import "./app.css";
 import { GitLog, Glyph } from "./log.tsx";
-import { GithubAccount, GithubChecks } from "./github-ui.tsx";
+import { FixChatSetup, GithubAccount, GithubChecks } from "./github-ui.tsx";
 
 type Rpc = ReturnType<typeof useRpc<typeof rpcContract>>;
 const errorText = (error: unknown) => error instanceof Error ? error.message : String(error);
@@ -18,7 +18,7 @@ function GitPage({ threadId: panelThreadId }: { threadId?: string }) {
   const context = useBbContext();
   const threadId = panelThreadId ?? context.threadId ?? undefined;
   const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
-  const [projectId, setProjectId] = useState(context.projectId ?? readSaved("bb-git-project") ?? "");
+  const [projectId, setProjectId] = useState(context.projectId ?? readSaved("bb-git-deck-project") ?? "");
   const [targets, setTargets] = useState<Target[]>([]);
   const [targetId, setTargetId] = useState("");
   const [busy, setBusy] = useState(false);
@@ -39,11 +39,11 @@ function GitPage({ threadId: panelThreadId }: { threadId?: string }) {
     if (!projectId) return;
     let current = true;
     setLoading(true); setError(""); setTargets([]); setTargetId("");
-    save("bb-git-project", projectId);
+    save("bb-git-deck-project", projectId);
     void rpc.call("targets", { projectId, ...(threadId ? { threadId } : {}) }).then((result) => {
       if (!current) return;
       setTargets(result);
-      const remembered = readSaved(`bb-git-target:${projectId}`);
+      const remembered = readSaved(`bb-git-deck-target:${projectId}`);
       setTargetId(!threadId && result.some((t) => t.id === remembered) ? remembered! : result[0]?.id ?? "");
       setLoading(false);
     }, (e) => { if (current) { setError(errorText(e)); setLoading(false); } });
@@ -52,11 +52,11 @@ function GitPage({ threadId: panelThreadId }: { threadId?: string }) {
   const target = targets.find((t) => t.id === targetId);
   return <div className="git-page">
     <div className="git-context">
-      <Icon name="GitBranch" className="git-icon" /><strong>Git</strong>
+      <Icon name="GitBranch" className="git-icon" /><strong>Git Deck</strong>
       <select aria-label="Project" value={projectId} disabled={busy} onChange={(e) => setProjectId(e.target.value)}>
         {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
       </select>
-      <select aria-label="Checkout" value={targetId} disabled={busy || !targets.length} onChange={(e) => { setTargetId(e.target.value); save(`bb-git-target:${projectId}`, e.target.value); }}>
+      <select aria-label="Checkout" value={targetId} disabled={busy || !targets.length} onChange={(e) => { setTargetId(e.target.value); save(`bb-git-deck-target:${projectId}`, e.target.value); }}>
         {targets.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
       </select>
     </div>
@@ -291,6 +291,7 @@ function Credential({ job, answer, cancel }: { job: Job; answer: (value: string)
 }
 
 export default definePluginApp((app) => {
-  app.slots.navPanel({ id: "git", title: "Git", icon: "GitBranch", path: "git", component: () => <GitPage /> });
-  app.slots.threadPanelAction({ id: "git", title: "Git", icon: "GitBranch", component: ({ threadId }: PluginThreadPanelProps) => <GitPage threadId={threadId} />, run: ({ openPanel }) => { openPanel({ title: "Git" }); } });
+  app.composer.customize({ id: "git-deck-fix", scopes: ["new-thread"], banners: [{ id: "git-deck-fix-context", chrome: "bare", component: FixChatSetup }] });
+  app.slots.navPanel({ id: "git-deck", title: "Git Deck", icon: "GitBranch", path: "git-deck", component: () => <GitPage /> });
+  app.slots.threadPanelAction({ id: "git-deck", title: "Git Deck", icon: "GitBranch", component: ({ threadId }: PluginThreadPanelProps) => <GitPage threadId={threadId} />, run: ({ openPanel }) => { openPanel({ title: "Git Deck" }); } });
 });

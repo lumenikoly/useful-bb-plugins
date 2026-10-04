@@ -6,7 +6,7 @@ version, documentation, source code, tests, and release tags.
 | Plugin | Package | Description |
 | --- | --- | --- |
 | [Project Themes](plugins/project-themes/README.md) | `bb-plugin-project-themes` | One subtle color per project across threads, the browser tab, and the overall background. |
-| [Git](plugins/git/README.md) | `bb-plugin-git` | Changes, diffs, staging, commits, branches, and push/pull with a separate account for each project. |
+| [Git Deck](plugins/git-deck/README.md) | `bb-plugin-git-deck` | Branches, diffs, commits, push/pull, per-project accounts, and GitHub Actions fix requests. |
 | [Thread Overview](plugins/thread-overview/README.md) | `bb-plugin-thread-overview` | Results, changes, subagents, processes, and sources in the thread sidebar. |
 
 ## Repository structure

@@ -53,7 +53,7 @@ export function GitLog({ rpc, target, data, busy, start }: { rpc: Rpc; target: T
   const [file, setFile] = useState<Inspection["files"][number] | null>(null), [patch, setPatch] = useState<string | null>(null), [patchError, setPatchError] = useState("");
   const [split, setSplit] = useState(true), [showBranches, setShowBranches] = useState(true);
   const [dialog, setDialog] = useState<{ kind: "create" | "track" | "rename" | "delete" | "merge"; branch: string; name: string } | null>(null);
-  const favoritesKey = `bb-git-favorites:${target.hostId}:${data.root}`;
+  const favoritesKey = `bb-git-deck-favorites:${target.hostId}:${data.root}`;
   const [favorites, setFavorites] = useState<string[]>(() => { try { const value = JSON.parse(localStorage.getItem(favoritesKey) || "[]"); return Array.isArray(value) ? value.filter((s) => typeof s === "string") : []; } catch { return []; } });
   const selectedBranch = data.refs.find((b) => b.ref === ref);
   const rows = useMemo(() => graph(commits), [commits]);

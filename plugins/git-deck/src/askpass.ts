@@ -7,9 +7,9 @@ import { join } from "node:path";
 // Git and OpenSSH both invoke this helper with the prompt in argv and read
 // the answer from stdout. The secret stays in pipes and memory, never files.
 const helper = String.raw`const net = require('node:net');
-const socket = net.connect(process.env.BB_GIT_ASKPASS_SOCKET);
+const socket = net.connect(process.env.BB_GIT_DECK_ASKPASS_SOCKET);
 socket.setEncoding('utf8');
-socket.on('connect', () => socket.write(JSON.stringify({ token: process.env.BB_GIT_ASKPASS_TOKEN, text: process.argv[2] || 'Password:', confirm: process.env.SSH_ASKPASS_PROMPT === 'confirm' }) + '\n'));
+socket.on('connect', () => socket.write(JSON.stringify({ token: process.env.BB_GIT_DECK_ASKPASS_TOKEN, text: process.argv[2] || 'Password:', confirm: process.env.SSH_ASKPASS_PROMPT === 'confirm' }) + '\n'));
 let data = '', answered = false;
 socket.on('data', s => { data += s; if (!answered && data.includes('\n')) { try { const answer = JSON.parse(data); answered = true; if (answer.value === null) process.exit(1); process.stdout.write(answer.value + '\n', () => process.exit(0)); } catch { process.exit(1); } } });
 socket.on('error', () => process.exit(1));
@@ -20,7 +20,7 @@ const quote = (s: string) => "'" + s.replaceAll("'", "'\\''") + "'";
 
 export async function createAskpass(ask: (text: string, confirm: boolean) => Promise<string | null>, signal: AbortSignal) {
   if (process.platform === "win32") throw new Error("Password entry in the panel is currently supported on Linux/macOS. Use ssh-agent or the system terminal.");
-  const dir = await mkdtemp(join(tmpdir(), "bb-git-"));
+  const dir = await mkdtemp(join(tmpdir(), "bb-git-deck-"));
   const socketPath = join(dir, "sock"), token = randomUUID();
   const sockets = new Set<Socket>();
   const server = createServer((socket) => {
@@ -60,7 +60,7 @@ export async function createAskpass(ask: (text: string, confirm: boolean) => Pro
     signal.throwIfAborted();
     return { env: {
       GIT_ASKPASS: join(dir, "askpass"), SSH_ASKPASS: join(dir, "askpass"), SSH_ASKPASS_REQUIRE: "force",
-      BB_GIT_ASKPASS_SOCKET: socketPath, BB_GIT_ASKPASS_TOKEN: token,
+      BB_GIT_DECK_ASKPASS_SOCKET: socketPath, BB_GIT_DECK_ASKPASS_TOKEN: token,
     }, dispose };
   } catch (error) { await dispose(); throw error; }
 }

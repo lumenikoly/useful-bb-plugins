@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-03T19:24:37.229013+00:00",
-  "title": "Design System: BB Git",
+  "generatedAt": "2026-10-04T08:20:29.925233+00:00",
+  "title": "Design System: Git Deck",
   "extensions": {
     "colorMeta": {
       "primary": {
@@ -49,6 +49,14 @@
       {
         "name": "changes-stacked-viewport",
         "value": "520px"
+      },
+      {
+        "name": "checks-compact-container",
+        "value": "780px"
+      },
+      {
+        "name": "checks-stacked-container",
+        "value": "520px"
       }
     ]
   },
@@ -80,8 +88,8 @@
     {
       "name": "Workspace tabs",
       "kind": "nav",
-      "description": "Log, Changes and Account navigation.",
-      "html": "<div class=\"ds-tabs\" role=\"tablist\" aria-label=\"Git панели\"><button role=\"tab\" aria-selected=\"true\">Журнал</button><button role=\"tab\" aria-selected=\"false\">Изменения · 2</button><button role=\"tab\" aria-selected=\"false\">Аккаунт и SSH</button></div>",
+      "description": "Log, Changes and Checks navigation; Account opens from the toolbar gear.",
+      "html": "<div class=\"ds-tabs\" role=\"tablist\" aria-label=\"Git панели\"><button role=\"tab\" aria-selected=\"true\">Журнал</button><button role=\"tab\" aria-selected=\"false\">Изменения · 2</button><button role=\"tab\" aria-selected=\"false\">Checks</button></div>",
       "css": ".ds-tabs{display:flex;gap:24px;padding:0 16px;border-bottom:1px solid var(--border);}.ds-tabs button{font:inherit;min-height:30px;font-size:12px;padding:10px 0;border:0;border-bottom:2px solid transparent;border-radius:0;color:var(--muted-foreground);background:transparent;cursor:pointer;}.ds-tabs button[aria-selected=true]{color:var(--foreground);border-bottom-color:#5686dc;}.ds-tabs button:hover{background:var(--state-hover,var(--muted));}.ds-tabs button:focus-visible{outline:2px solid var(--ring);outline-offset:2px;}"
     },
     {
@@ -97,11 +105,18 @@
       "description": "Dense selected log entry; graph connections are supplied by real commit parents.",
       "html": "<button class=\"ds-log-row\"><span>Refine branch browser</span><span>Alex</span><time>03 окт.</time></button>",
       "css": ".ds-log-row{display:grid;grid-template-columns:minmax(0,1fr) 105px 58px;align-items:center;gap:12px;width:100%;height:32px;padding:0 12px;border:0;border-radius:0;font:inherit;font-size:12px;text-align:left;color:var(--foreground);background:color-mix(in srgb,#578bea 17%,var(--background));}.ds-log-row>span:last-of-type,.ds-log-row time{font-size:10px;color:var(--muted-foreground);}.ds-log-row time{font-variant-numeric:tabular-nums;}.ds-log-row:focus-visible{outline:2px solid var(--ring);outline-offset:2px;}"
+    },
+    {
+      "name": "Selected workflow run",
+      "kind": "custom",
+      "description": "Flat selected Checks row leading to job, failed-step and log diagnostics; Fix it prepares a native BB chat draft.",
+      "html": "<button class=\"ds-check-run\" aria-pressed=\"true\"><span class=\"ds-check-heading\"><strong>CI</strong><span class=\"ds-check-status\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"m9 9 6 6m0-6-6 6\"/></svg>failure</span></span><span class=\"ds-check-title\">Check branch changes</span><small><code>a18e62b</code><time>Oct 4, 10:25</time><span>HEAD</span></small></button>",
+      "css": ".ds-check-run{display:block;width:100%;padding:12px 14px;border:0;border-bottom:1px solid var(--border);border-radius:0;background:color-mix(in srgb,#578bea 17%,var(--background));color:var(--foreground);font:inherit;font-size:12px;text-align:left;cursor:pointer;}.ds-check-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}.ds-check-heading strong{font-weight:550;overflow-wrap:anywhere;min-width:0;}.ds-check-status{display:inline-flex;flex:none;align-items:center;gap:5px;white-space:nowrap;color:var(--destructive-text,var(--destructive));font-size:11px;}.ds-check-title{display:block;margin:7px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted-foreground);}.ds-check-run small{display:flex;flex-wrap:wrap;gap:10px;color:var(--muted-foreground);font-size:10px;font-variant-numeric:tabular-nums;}.ds-check-run code{font-family:monospace;}.ds-check-run:hover{background:var(--state-hover,var(--muted));}.ds-check-run[aria-pressed=true]:hover{background:color-mix(in srgb,#578bea 17%,var(--background));}.ds-check-run:focus-visible{outline:2px solid var(--ring);outline-offset:2px;}"
     }
   ],
   "narrative": {
     "northStar": "BB's native Git workspace",
-    "overview": "BB's native Git tool window follows the user-pinned IntelliJ IDEA Git Log reference: a branch browser, an actual parent graph and a revision inspector. The dense, flat workspace inherits BB's theme and font, using restrained blue selection and small colored graph lanes to organize repository history. Log, Changes and Account are separate tabs.",
+    "overview": "BB's native Git tool window follows the user-pinned IntelliJ IDEA Git Log reference: a branch browser, an actual parent graph and a revision inspector. The dense, flat workspace inherits BB's theme and font, using restrained blue selection and small colored graph lanes to organize repository history. Log, Changes and Checks are separate tabs. Checks extends this tool window with a compact workflow-run browser and diagnostics pane; Account remains accessible through the toolbar gear.",
     "keyCharacteristics": [
       "Host-themed surfaces, compact controls and bordered panes.",
       "Branch browsing, graph history and revision details share one desktop view.",
