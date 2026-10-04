@@ -1,21 +1,8 @@
-Keep a todo list beside the work it belongs to, in the sidebar and in
-your agent threads.
+Обзор текущего треда рядом с чатом: результаты, изменения, субагенты,
+фоновые процессы и источники.
 
-## What you get
-
-- An **Example todos** page in the left sidebar that adds, completes, and
-  removes todos.
-- A `bb thread-overview` command that does the same from a terminal.
-- Live updates, so a change made in one place reaches every open page at once.
-
-## How it works
-
-The todos live in this plugin's own storage on the BB server, one list per
-installation. Nothing leaves the machine, and the plugin needs no account, API
-key, or external service.
-
-## For agents
-
-The bundled skill tells an agent to read the list with `bb thread-overview list`, add
-one todo at a time with `bb thread-overview add`, and close finished work with
-`bb thread-overview done`.
+Открывается кнопкой **Обзор** в заголовке или через новую вкладку правой панели.
+Использует реальные данные bb, штатные ссылки на файлы и diff. Поддерживает темы,
+узкие экраны, сворачивание длинных списков и автоматическое обновление.
+Полнота истории и доступность фоновых задач зависят от провайдера; ограничения
+и команды установки описаны в README.

@@ -4,6 +4,7 @@ import { experimental_defineHostEntry } from "@get-bb/plugin-sdk";
 import { createAskpass } from "./askpass.ts";
 import { hostContract, type Job } from "./contracts.ts";
 import { diff, git, perform, repository, snapshot, log, inspect, revisionDiff } from "./git.ts";
+import { checks, setAccount, runDetail, failedLogs, fixPrompt } from "./github.ts";
 
 type GitJob = { view: Job; root: string; abort: AbortController; reply?: (value: string | null) => void; finished?: number };
 const jobs = new Map<string, GitJob>();
@@ -18,6 +19,11 @@ async function findJob(path: string, jobId: string, signal: AbortSignal) {
 export default experimental_defineHostEntry({
   contract: hostContract,
   handlers: {
+    github: ({ path, remote }, { signal }) => checks(path, remote, signal),
+    githubAccount: ({ path, login }, { signal }) => setAccount(path, login, signal),
+    githubRun: ({ path, remote, runId }, { signal }) => runDetail(path, remote, runId, signal),
+    githubLogs: ({ path, remote, runId, jobId, attempt }, { signal }) => failedLogs(path, remote, runId, jobId, attempt, signal),
+    githubFix: ({ path, remote, runId, jobId, attempt, head }, { signal }) => fixPrompt(path, remote, runId, jobId, attempt, head, signal),
     snapshot: async ({ path }, { signal }) => {
       const result = await snapshot(path, signal);
       result.activeJob = [...jobs.values()].find((job) => job.root === result.root && job.view.state === "running")?.view.id ?? null;

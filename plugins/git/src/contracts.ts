@@ -51,11 +51,34 @@ export const jobSchema = z.object({
   output: z.string().max(270000), prompt: promptSchema.nullable(),
 });
 export type Job = z.infer<typeof jobSchema>;
+const githubLogin = z.string().max(100).regex(/^[a-zA-Z0-9-]*$/);
+const githubRun = z.object({ databaseId: z.number().int().positive(), workflowName: text, displayTitle: text,
+  headBranch: text, headSha: hash, status: text, conclusion: text, event: text, url: z.string().url(), createdAt: text, attempt: z.number().int().positive() });
+export type GithubRun = z.infer<typeof githubRun>;
+export const githubJob = z.object({ databaseId: z.number().int().positive(), name: text, status: text, conclusion: text,
+  url: z.string().url(), steps: z.array(z.object({ name: text, number: z.number().int(), status: text, conclusion: text })) });
+export type GithubJob = z.infer<typeof githubJob>;
+export const githubDetail = z.object({ run: githubRun, jobs: z.array(githubJob) });
+export type GithubDetail = z.infer<typeof githubDetail>;
+export const githubState = z.object({ installed: z.boolean(), repository: text, hostname: text, branch: text, head: z.string(),
+  account: githubLogin, activeAccount: githubLogin, accounts: z.array(z.object({ login: githubLogin, active: z.boolean(), state: text })),
+  runs: z.array(githubRun), error: z.string() });
+export type GithubState = z.infer<typeof githubState>;
+const githubFields = { remote: ref };
+const runFields = { ...githubFields, runId: z.number().int().positive() };
+const logFieldsGithub = { ...runFields, jobId: z.number().int().positive().nullable(), attempt: z.number().int().positive() };
+const githubLogs = z.object({ text: z.string().max(100000), truncated: z.boolean() });
+const githubFix = z.object({ prompt: z.string().max(120000), branch: text, head: hash });
 const pathInput = z.object({ path: text.min(1) });
 const jobInput = pathInput.extend({ jobId: z.string().uuid() });
 const diffInput = pathInput.extend({ pathspec: file, staged: z.boolean() });
 const answerInput = jobInput.extend({ promptId: z.string().uuid(), value: z.string().max(8192).refine((s) => !/[\r\n\0]/.test(s)) });
 export const hostContract = defineRpcContract({
+  github: { input: pathInput.extend(githubFields), output: githubState },
+  githubAccount: { input: pathInput.extend({ login: githubLogin }), output: z.null() },
+  githubRun: { input: pathInput.extend(runFields), output: githubDetail },
+  githubLogs: { input: pathInput.extend(logFieldsGithub), output: githubLogs },
+  githubFix: { input: pathInput.extend({ ...logFieldsGithub, head: hash }), output: githubFix },
   snapshot: { input: pathInput, output: snapshotSchema },
   log: { input: pathInput.extend(logFields), output: logSchema },
   inspect: { input: pathInput.extend(inspectFields), output: inspectSchema },
@@ -70,6 +93,11 @@ export const targetSchema = z.object({ id: z.string(), projectId: z.string(), ho
 export type Target = z.infer<typeof targetSchema>;
 const targetInput = z.object({ projectId: z.string(), targetId: z.string() });
 export const rpcContract = defineRpcContract({
+  github: { input: targetInput.extend(githubFields), output: githubState },
+  githubAccount: { input: targetInput.extend({ login: githubLogin }), output: z.null() },
+  githubRun: { input: targetInput.extend(runFields), output: githubDetail },
+  githubLogs: { input: targetInput.extend(logFieldsGithub), output: githubLogs },
+  githubFix: { input: targetInput.extend({ ...logFieldsGithub, head: hash }), output: githubFix },
   projects: { input: z.null(), output: z.array(z.object({ id: z.string(), name: z.string() })) },
   targets: { input: z.object({ projectId: z.string(), threadId: z.string().optional() }), output: z.array(targetSchema) },
   snapshot: { input: targetInput, output: snapshotSchema },

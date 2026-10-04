@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-03T21:06:00.463792+00:00",
+  "title": "Design System: Thread Overview",
+  "extensions": {
+    "colorMeta": {
+      "background": {
+        "role": "neutral",
+        "displayName": "Background"
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Foreground"
+      },
+      "muted-foreground": {
+        "role": "neutral",
+        "displayName": "Muted Foreground"
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Border"
+      },
+      "accent": {
+        "role": "neutral",
+        "displayName": "Accent"
+      },
+      "ring": {
+        "role": "neutral",
+        "displayName": "Ring"
+      },
+      "destructive": {
+        "role": "neutral",
+        "displayName": "Destructive"
+      }
+    },
+    "typographyMeta": {
+      "body": {
+        "displayName": "Body",
+        "purpose": "Primary row labels."
+      },
+      "section-title": {
+        "displayName": "Section title",
+        "purpose": "Quiet section headings."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Supporting copy and counts."
+      },
+      "metadata": {
+        "displayName": "Metadata",
+        "purpose": "Agent execution details and statuses."
+      },
+      "message": {
+        "displayName": "Message",
+        "purpose": "Native chat message body."
+      }
+    },
+    "shadows": [],
+    "motion": [],
+    "breakpoints": [
+      {
+        "name": "compact-layout",
+        "value": "600px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Overview launcher",
+      "kind": "button",
+      "refersTo": "launcher",
+      "description": "Host header action with two circles and two lines.",
+      "html": "<button class=\"ds-launcher\" aria-label=\"Открыть обзор треда\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 6a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0M13 6h7M9 17a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0M13 17h7\"/></svg><span>Обзор</span></button>",
+      "css": ".ds-row{display:flex;align-items:center;gap:8px;padding:7px 6px;min-height:34px;width:100%;border:0;border-radius:6px;text-align:left;font:inherit;font-size:13px;line-height:1.5;color:var(--foreground);background:transparent;cursor:pointer}.ds-row:hover{background:var(--accent)}.ds-row:focus-visible{outline:2px solid var(--ring);outline-offset:2px}.ds-label{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.ds-icon{width:16px;height:16px;flex:none;color:var(--muted-foreground)}.ds-meta{font-size:11px;color:var(--muted-foreground)}.ds-launcher{display:inline-flex;align-items:center;gap:6px;padding:4px 6px;min-height:30px;border:0;border-radius:6px;background:transparent;color:var(--foreground);font:inherit;font-size:12px;cursor:pointer}.ds-launcher:hover{background:var(--accent)}.ds-launcher:focus-visible{outline:2px solid var(--ring);outline-offset:2px}"
+    },
+    {
+      "name": "Subagent row",
+      "kind": "button",
+      "refersTo": "row",
+      "description": "Opens a transcript; supplied execution metadata appears beneath the name.",
+      "html": "<button class=\"ds-row\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"8\" r=\"5\"/><path d=\"M20 21a8 8 0 0 0-16 0\"/></svg><span class=\"ds-agent\"><span>Проверка изменений</span><small class=\"ds-meta\">model · reasoning</small></span><small class=\"ds-meta\">Работает</small></button>",
+      "css": ".ds-row{display:flex;align-items:center;gap:8px;padding:7px 6px;min-height:34px;width:100%;border:0;border-radius:6px;text-align:left;font:inherit;font-size:13px;line-height:1.5;color:var(--foreground);background:transparent;cursor:pointer}.ds-row:hover{background:var(--accent)}.ds-row:focus-visible{outline:2px solid var(--ring);outline-offset:2px}.ds-label{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.ds-icon{width:16px;height:16px;flex:none;color:var(--muted-foreground)}.ds-meta{font-size:11px;color:var(--muted-foreground)}.ds-agent{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}.ds-agent>span,.ds-agent>small{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}"
+    },
+    {
+      "name": "Refresh button",
+      "kind": "button",
+      "refersTo": "icon-button",
+      "description": "Compact refresh action, dimmed while refreshing.",
+      "html": "<button class=\"ds-refresh\" aria-label=\"Обновить обзор\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-1l2 6M4 12l2 6a7 7 0 0 0 12-1\"/></svg></button>",
+      "css": ".ds-row{display:flex;align-items:center;gap:8px;padding:7px 6px;min-height:34px;width:100%;border:0;border-radius:6px;text-align:left;font:inherit;font-size:13px;line-height:1.5;color:var(--foreground);background:transparent;cursor:pointer}.ds-row:hover{background:var(--accent)}.ds-row:focus-visible{outline:2px solid var(--ring);outline-offset:2px}.ds-label{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.ds-icon{width:16px;height:16px;flex:none;color:var(--muted-foreground)}.ds-meta{font-size:11px;color:var(--muted-foreground)}.ds-refresh{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:var(--foreground);cursor:pointer}.ds-refresh:hover{background:var(--accent)}.ds-refresh:focus-visible{outline:2px solid var(--ring);outline-offset:2px}.ds-refresh:disabled{opacity:.45;cursor:wait}"
+    },
+    {
+      "name": "Section container",
+      "kind": "card",
+      "description": "One bordered wrapper with muted headings and thin separators.",
+      "html": "<aside class=\"ds-card\"><section class=\"ds-section\"><h2>Результаты</h2><p>Здесь появятся файлы, сохранённые агентом.</p></section><section class=\"ds-section\"><h2>Источники</h2><p>Здесь появятся вложения, прочитанные файлы и сайты.</p></section></aside>",
+      "css": ".ds-card{padding:12px 24px 8px;border:1px solid var(--border);border-radius:22px;max-width:440px;margin:0 auto;background:var(--background);color:var(--foreground);font-family:inherit}.ds-section{padding:18px 0}.ds-section+.ds-section{border-top:1px solid var(--border)}.ds-section h2{margin:0 0 10px;font-size:13px;line-height:1.5;font-weight:400;color:var(--muted-foreground)}.ds-section p{margin:0;color:var(--muted-foreground);font-size:12px;line-height:1.7}"
+    },
+    {
+      "name": "Inline disclosure",
+      "kind": "custom",
+      "refersTo": "row",
+      "description": "Native expandable work or source detail.",
+      "html": "<details class=\"ds-detail\"><summary class=\"ds-row\"><span class=\"ds-label\">Поиск в интернете</span></summary><pre>Запросы из истории треда</pre></details>",
+      "css": ".ds-row{display:flex;align-items:center;gap:8px;padding:7px 6px;min-height:34px;width:100%;border:0;border-radius:6px;text-align:left;font:inherit;font-size:13px;line-height:1.5;color:var(--foreground);background:transparent;cursor:pointer}.ds-row:hover{background:var(--accent)}.ds-row:focus-visible{outline:2px solid var(--ring);outline-offset:2px}.ds-label{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.ds-icon{width:16px;height:16px;flex:none;color:var(--muted-foreground)}.ds-meta{font-size:11px;color:var(--muted-foreground)}.ds-detail summary{list-style:none}.ds-detail summary::-webkit-details-marker{display:none}.ds-detail[open] summary{background:var(--accent)}.ds-detail pre{margin:8px 4px;max-height:240px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.6;color:var(--foreground)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Native BB thread overview",
+    "overview": "Full-width native BB panel with a fixed toolbar and scrolling sections. Readable agent task names and grouped activity retain the conversation hierarchy.",
+    "keyCharacteristics": [
+      "Host theme and font",
+      "Full-width panel",
+      "Readable task names",
+      "Native Markdown, SourceCode and Diff"
+    ],
+    "rules": [
+      {
+        "name": "Host Palette",
+        "body": "Inherit BB semantic colors.",
+        "section": "Colors"
+      },
+      {
+        "name": "Native Panel",
+        "body": "Fill the host panel; do not nest an outlined overview card.",
+        "section": "Layout"
+      }
+    ],
+    "dos": [
+      "Use native content renderers.",
+      "Group consecutive actions.",
+      "Keep status indicators compact."
+    ],
+    "donts": [
+      "Do not display service paths as task titles.",
+      "Do not repeat completion text for every action.",
+      "Do not invent execution metadata."
+    ]
+  }
+}

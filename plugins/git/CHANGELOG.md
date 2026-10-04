@@ -2,6 +2,9 @@
 
 ## 0.1.0
 
+- GitHub Actions Checks via gh: branch workflow runs, jobs, failed-step logs and editable Fix it requests in BB's native composer.
+- Repository-specific GitHub account selection, system SSH alias resolution, revision/attempt guards and bounded diagnostic output.
+
 - Сохранена совместимость snapshot с уже открытым интерфейсом при перезагрузке плагина: поля `branches` и `history` остаются доступны.
 
 - Переработан интерфейс по Git Log IntelliJ IDEA: ветки / граф / детали коммита.

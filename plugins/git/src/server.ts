@@ -39,6 +39,26 @@ export default function plugin(bb: BbPluginApi) {
     throw new Error("Checkout is unavailable. Refresh the environment list.");
   }
   bb.rpc.register(rpcContract, {
+    github: async ({ projectId, targetId, remote }) => {
+      const t = await target(projectId, targetId);
+      return host.call("github", { path: t.path, remote }, { hostId: t.hostId });
+    },
+    githubAccount: async ({ projectId, targetId, login }) => {
+      const t = await target(projectId, targetId);
+      return host.call("githubAccount", { path: t.path, login }, { hostId: t.hostId });
+    },
+    githubRun: async ({ projectId, targetId, remote, runId }) => {
+      const t = await target(projectId, targetId);
+      return host.call("githubRun", { path: t.path, remote, runId }, { hostId: t.hostId });
+    },
+    githubLogs: async ({ projectId, targetId, remote, runId, jobId, attempt }) => {
+      const t = await target(projectId, targetId);
+      return host.call("githubLogs", { path: t.path, remote, runId, jobId, attempt }, { hostId: t.hostId });
+    },
+    githubFix: async ({ projectId, targetId, remote, runId, jobId, attempt, head }) => {
+      const t = await target(projectId, targetId);
+      return host.call("githubFix", { path: t.path, remote, runId, jobId, attempt, head }, { hostId: t.hostId });
+    },
     projects: async () => (await bb.sdk.projects.list()).map(({ id, name }) => ({ id, name })),
     targets: ({ projectId, threadId }) => targets(projectId, threadId),
     snapshot: async ({ projectId, targetId }) => {

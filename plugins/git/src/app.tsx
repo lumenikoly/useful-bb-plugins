@@ -3,6 +3,7 @@ import { definePluginApp, experimental_Diff as Diff, experimental_Icon as Icon, 
 import type { Action, Change, Job, Snapshot, Target, rpcContract } from "./contracts.ts";
 import "./app.css";
 import { GitLog, Glyph } from "./log.tsx";
+import { GithubAccount, GithubChecks } from "./github-ui.tsx";
 
 type Rpc = ReturnType<typeof useRpc<typeof rpcContract>>;
 const errorText = (error: unknown) => error instanceof Error ? error.message : String(error);
@@ -60,12 +61,12 @@ function GitPage({ threadId: panelThreadId }: { threadId?: string }) {
       </select>
     </div>
     {error && <div className="git-error" role="alert">{error} <button onClick={() => setRevision((v) => v + 1)}>Retry</button></div>}
-    {target ? <Repository key={`${projectId}:${target.id}`} rpc={rpc} target={target} onBusy={setBusy} />
+    {target ? <Repository key={`${projectId}:${target.id}`} rpc={rpc} target={target} threadId={threadId} onBusy={setBusy} />
       : <div className="git-empty" role="status">{loading ? "Loading checkout…" : projects.length ? "This project has no available Git checkout. Add a repository path in project settings." : "Add a Git project to BB to get started."}</div>}
   </div>;
 }
 
-function Repository({ rpc, target, onBusy }: { rpc: Rpc; target: Target; onBusy: (busy: boolean) => void }) {
+function Repository({ rpc, target, threadId, onBusy }: { rpc: Rpc; target: Target; threadId?: string; onBusy: (busy: boolean) => void }) {
   const input = { projectId: target.projectId, targetId: target.id };
   const [data, setData] = useState<Snapshot | null>(null);
   const [error, setError] = useState("");
@@ -78,7 +79,7 @@ function Repository({ rpc, target, onBusy }: { rpc: Rpc; target: Target; onBusy:
   const [patch, setPatch] = useState<string | null>(null);
   const [diffError, setDiffError] = useState("");
   const [diffView, setDiffView] = useState<"unified" | "split">("split");
-  const [tab, setTab] = useState<"diff" | "history" | "account">("history");
+  const [tab, setTab] = useState<"diff" | "history" | "checks" | "account">("history");
 
   const alive = useRef(true), request = useRef(0);
   const messageId = useId();
@@ -205,14 +206,15 @@ function Repository({ rpc, target, onBusy }: { rpc: Rpc; target: Target; onBusy:
       <button className="git-icon-button git-settings-button" aria-label="Account and SSH" title="Account and SSH" aria-pressed={tab === "account"} onClick={() => setTab((current) => current === "account" ? "history" : "account")}><Glyph name="settings" /></button>
     </div>
     {error && <p role="alert" className="git-error">{error}<button aria-label="Dismiss error" onClick={() => setError("")}>Close</button></p>}
-        <div className="git-tabs" role="tablist" aria-label="Git views">{(["history", "diff"] as const).map((id, i, tabs) => <button key={id} id={`${panelId}-${id}`} role="tab" tabIndex={tab === id || tab === "account" && id === "history" ? 0 : -1} aria-selected={tab === id} onClick={() => setTab(id)} onKeyDown={(e) => {
+        <div className="git-tabs" role="tablist" aria-label="Git views">{(["history", "diff", "checks"] as const).map((id, i, tabs) => <button key={id} id={`${panelId}-${id}`} role="tab" tabIndex={tab === id || tab === "account" && id === "history" ? 0 : -1} aria-selected={tab === id} onClick={() => setTab(id)} onKeyDown={(e) => {
           const next = e.key === "ArrowRight" ? (i + 1) % tabs.length : e.key === "ArrowLeft" ? (i + tabs.length - 1) % tabs.length : e.key === "Home" ? 0 : e.key === "End" ? tabs.length - 1 : null;
           if (next === null) return;
           e.preventDefault(); setTab(tabs[next]); (e.currentTarget.parentElement?.children[next] as HTMLElement | undefined)?.focus();
-        }}>{id === "diff" ? `Changes · ${data.changes.length}` : "Log"}</button>)}</div>
+        }}>{id === "diff" ? `Changes · ${data.changes.length}` : id === "checks" ? "Checks" : "Log"}</button>)}</div>
     {data.merging && <div className="git-merge-banner"><strong>Merge in progress</strong><span>{conflicts.length ? `Conflicts: ${conflicts.length}. Resolve the files and stage them.` : "Conflicts resolved. Complete the merge."}</span><button onClick={() => setTab("diff")}>Open Changes</button><button disabled={busy || !!conflicts.length} onClick={() => void start({ kind: "merge-continue" })}>Complete merge</button><button disabled={busy} onClick={() => void start({ kind: "merge-abort" })}>Abort merge</button></div>}
     <div className="git-log-tab" hidden={tab !== "history"}><GitLog rpc={rpc} target={target} data={data} busy={busy} start={start} /></div>
-    {tab === "account" && <div className="git-account-scroll"><Account key={JSON.stringify(data.config) + JSON.stringify(data.remotes)} data={data} busy={busy} start={start} /></div>}
+    {tab === "checks" && <GithubChecks key={remote} rpc={rpc} target={target} remote={remote} revision={`${data.branch}:${data.history[0]?.hash || ""}`} threadId={threadId} openAccount={() => setTab("account")} />}
+    {tab === "account" && <div className="git-account-scroll"><Account key={JSON.stringify(data.config) + JSON.stringify(data.remotes)} data={data} busy={busy} start={start} rpc={rpc} target={target} githubRemote={remote} /></div>}
     <div className="git-workspace" hidden={tab !== "diff"}>
 
       <aside className="git-changes">
@@ -240,7 +242,7 @@ function Repository({ rpc, target, onBusy }: { rpc: Rpc; target: Target; onBusy:
   </>;
 }
 
-function Account({ data, busy, start }: { data: Snapshot; busy: boolean; start: (action: Action) => Promise<void> }) {
+function Account({ data, busy, start, rpc, target, githubRemote }: { data: Snapshot; busy: boolean; start: (action: Action) => Promise<void>; rpc: Rpc; target: Target; githubRemote: string }) {
   const [name, setName] = useState(data.config.localName), [email, setEmail] = useState(data.config.localEmail), [sshCommand, setSshCommand] = useState(data.config.localSshCommand);
   const [remote, setRemote] = useState(data.remotes[0]?.name ?? ""), [url, setUrl] = useState(data.remotes[0]?.url ?? "");
   const id = useId();
@@ -264,6 +266,7 @@ function Account({ data, busy, start }: { data: Snapshot; busy: boolean; start: 
       <button disabled={!url.trim()}>Save URL</button>
     </fieldset></form> : <p className="git-muted">No remotes yet. Add one using <code>git remote add origin &lt;url&gt;</code>.</p>}
     <p className="git-muted">Git and SSH run on the checkout’s host, using its SSH config, known_hosts, ssh-agent and credential helpers. Passwords and passphrases are entered on request and are not stored by the plugin.</p>
+    <GithubAccount key={githubRemote} rpc={rpc} target={target} remote={githubRemote} />
   </div>;
 }
 

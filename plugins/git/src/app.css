@@ -254,3 +254,65 @@
   .git-toolbar > select { max-width: 65px; }
   .git-toolbar .git-icon-button { width: 28px; height: 30px; }
 }
+
+/* Checks extends the native, flat Git workspace: runs left, diagnostics right. */
+.git-checks-shell { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+.git-checks-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 8px 14px; border-bottom: 1px solid var(--border); }
+.git-checks-toolbar > strong { min-width: 0; overflow-wrap: anywhere; font-weight: 550; }
+.git-checks-toolbar-spacer { flex: 1; }
+.git-checks-shell .git-icon-button { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 30px; padding: 0; border-color: transparent; background: transparent; }
+.git-check-failures, .git-check-status[data-status=failure], .git-check-failed-step { color: var(--destructive-text, var(--destructive)); }
+.git-checks-layout { display: grid; grid-template-columns: minmax(230px, 34%) minmax(0, 1fr); flex: 1; min-height: 0; }
+.git-check-runs { overflow: auto; border-right: 1px solid var(--border); }
+.git-check-pane-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 36px; padding: 8px 14px; font-weight: 550; border-bottom: 1px solid var(--border); }
+.git-check-pane-heading > span { color: var(--muted-foreground); font-weight: 400; font-variant-numeric: tabular-nums; }
+.git-page .git-check-run { display: block; width: 100%; text-align: left; padding: 12px 14px; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent; }
+.git-page .git-check-run:hover { background: var(--state-hover, var(--muted)); }
+.git-page .git-check-run[aria-pressed=true] { background: color-mix(in srgb, #578bea 17%, var(--background)); }
+.git-check-run > div { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.git-check-run strong { font-weight: 550; overflow-wrap: anywhere; min-width: 0; }
+.git-check-run-title { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 7px 0; color: var(--muted-foreground); }
+.git-check-run small { display: flex; flex-wrap: wrap; gap: 10px; color: var(--muted-foreground); font-size: 10px; font-variant-numeric: tabular-nums; }
+.git-check-status { display: inline-flex; flex: none; align-items: center; gap: 5px; white-space: nowrap; color: var(--muted-foreground); font-size: 11px; }
+.git-check-status[data-status=success] { color: var(--foreground); }
+.git-check-status[data-status=pending] { color: var(--foreground); }
+.git-check-detail { min-width: 0; overflow: auto; padding-bottom: 20px; }
+.git-check-detail-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 16px; border-bottom: 1px solid var(--border); }
+.git-check-detail-heading > div { min-width: 0; }
+.git-check-detail-heading h2, .git-checks-connection h2 { margin: 0; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.git-check-detail-heading p { margin: 7px 0 10px; overflow-wrap: anywhere; }
+.git-check-metadata { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; color: var(--muted-foreground); font-size: 11px; }
+.git-check-stale { margin: 0; padding: 10px 16px; background: var(--muted); color: var(--foreground); line-height: 1.6; }
+.git-check-jobs > .git-muted { padding: 0 16px; }
+.git-check-job { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.git-check-job-heading { display: flex; align-items: baseline; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+.git-check-job-heading strong { font-weight: 550; overflow-wrap: anywhere; }
+.git-check-failed-step { margin: 8px 0; line-height: 1.5; overflow-wrap: anywhere; font-size: 11px; }
+.git-check-job-actions, .git-check-run-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.git-check-job-actions .git-primary { display: inline-flex; align-items: center; gap: 6px; }
+.git-check-run-actions { margin: 12px 16px; }
+.git-check-detail > :is(.git-muted, .git-error) { margin: 12px 16px; }
+.git-check-logs, .git-check-fix { margin-top: 16px; border-top: 1px solid var(--border); }
+.git-check-logs > .git-muted, .git-check-fix > .git-muted { margin: 10px 16px; }
+.git-check-logs pre { padding: 14px 16px; margin: 0; font: 11px/1.6 monospace; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--muted); max-height: 420px; overflow: auto; }
+.git-check-fix > button { margin: 0 16px 12px; }
+.git-check-fix { padding-bottom: 8px; }
+.git-checks-connection { padding: 24px 16px; max-width: 650px; }
+.git-checks-connection > div { display: flex; gap: 8px; }
+.git-github-account { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--border); }
+.git-github-account > label { display: block; margin-bottom: 8px; }
+.git-github-account > select { width: 100%; }
+@container (max-width: 780px) {
+  .git-checks-layout { grid-template-columns: minmax(170px, 32%) minmax(0, 1fr); }
+  .git-check-run > div { display: block; }
+  .git-check-run .git-check-status { margin-top: 7px; }
+}
+@container (max-width: 520px) {
+  .git-checks-layout { display: flex; flex-direction: column; overflow: auto; }
+  .git-check-runs { flex: none; max-height: 220px; border-right: 0; border-bottom: 1px solid var(--border); }
+  .git-check-detail { overflow: visible; flex: none; }
+  .git-check-run > div { display: flex; }
+  .git-check-run .git-check-status { margin-top: 0; }
+  .git-checks-toolbar > strong { max-width: calc(100% - 110px); }
+  .git-check-job-actions > button { min-height: 36px; }
+}

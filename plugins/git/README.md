@@ -137,3 +137,23 @@ npm run build --workspace=bb-plugin-git
 реальный OpenSSH askpass с зашифрованным ключом, отмену запроса пароля,
 tracking-ветки, безопасное удаление, граф родителей, diff коммитов и восстановление
 после merge-конфликта.
+## GitHub Actions
+
+Open **Checks** for recent workflow runs on the current branch. **View logs**
+shows failed-step output; **Fix it** prepares a request in BB’s native thread
+composer. Review the workspace and agent, then send. The default is a worktree
+based on the current branch. A thread panel can also append the request to the
+current chat when it belongs to the selected checkout, without sending it.
+
+Requires GitHub CLI (`gh`) on the checkout’s host. Sign in using `gh auth login`,
+then select the repository’s GitHub account in **Account and SSH**. The plugin
+uses local `bb.githubAccount` Git config and never changes gh’s active account.
+SSH push credentials and GitHub API authorization are separate. GitHub SSH
+aliases are resolved using the host’s system SSH config; Enterprise hosts use
+their own gh login.
+
+Fix requests include the failed and current commits, run attempt, jobs and
+failed-step logs (last 96,000 characters if truncated). The current branch must
+contain the failed commit, and the agent is instructed to verify older failures
+still apply. Refresh after switching checkout or rerunning a workflow. No
+automatic commit or push. The initial integration supports GitHub Actions only.

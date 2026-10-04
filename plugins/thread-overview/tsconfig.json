@@ -7,24 +7,18 @@
     "jsx": "react-jsx",
     "lib": [
       "ES2022",
-      "DOM"
+      "DOM",
+      "DOM.Iterable"
     ],
     "types": [
       "node"
     ],
-    "paths": {
-      "@/*": [
-        "./*"
-      ]
-    },
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "skipLibCheck": false
   },
   "include": [
-    "server.ts",
-    "app.tsx",
-    "components",
-    "lib",
-    "hooks"
+    "src/**/*.ts",
+    "src/**/*.tsx"
   ]
 }
