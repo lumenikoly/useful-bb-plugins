@@ -1,42 +1,43 @@
 # bb-plugins
 
-Коллекция небольших самостоятельных плагинов для bb. Каждый пакет имеет свою
-версию, описание, исходники, тесты и теги релизов.
+A collection of small, standalone plugins for bb. Each package has its own
+version, documentation, source code, tests, and release tags.
 
-| Плагин | Пакет | Описание |
+| Plugin | Package | Description |
 | --- | --- | --- |
-| [Project Themes](plugins/project-themes/README.md) | `bb-plugin-project-themes` | Один мягкий цвет на проект: треды, вкладка браузера и общий фон. |
-| [Git](plugins/git/README.md) | `bb-plugin-git` | Изменения, diff, staging, коммиты, ветки и push/pull с отдельным аккаунтом проекта. |
-| [Thread Overview](plugins/thread-overview/README.md) | `bb-plugin-thread-overview` | Результаты, изменения, субагенты, процессы и источники в боковой панели треда. |
+| [Project Themes](plugins/project-themes/README.md) | `bb-plugin-project-themes` | One subtle color per project across threads, the browser tab, and the overall background. |
+| [Git](plugins/git/README.md) | `bb-plugin-git` | Changes, diffs, staging, commits, branches, and push/pull with a separate account for each project. |
+| [Thread Overview](plugins/thread-overview/README.md) | `bb-plugin-thread-overview` | Results, changes, subagents, processes, and sources in the thread sidebar. |
 
-## Структура
+## Repository structure
 
 ```text
-.bb/plugins.json             Каталог для установки конкретного плагина
-.github/workflows/           Общий CI и создание черновиков релизов
+.bb/plugins.json             Catalog for installing individual plugins
+.github/workflows/           Shared CI and release draft creation
 plugins/
   project-themes/
-    package.json             Самостоятельный manifest bb/npm
-    src/                     Frontend и backend
+    package.json             Standalone bb/npm manifest
+    src/                     Frontend and backend
     tests/
     skills/
     README.md
     PLUGIN_OVERVIEW.md
     CHANGELOG.md
-docs/RELEASING.md             Порядок выпуска независимых версий
-scripts/release-info.mjs      Сопоставление тега, каталога и версии пакета
-package.json                 Приватный npm workspace
-package-lock.json            Один lockfile для всей коллекции
+docs/RELEASING.md             Independent version release workflow
+scripts/release-info.mjs      Maps tags to directories and package versions
+package.json                 Private npm workspace
+package-lock.json            One lockfile for the entire collection
 ```
 
-`packages/` добавляется только при появлении настоящего общего кода.
-Зависимости объявляются в пакетах плагинов, npm hoist устанавливает общие версии
-один раз. SDK остаётся закреплён в каждом пакете; сборочная версия `bb-app`
-закреплена в корне. tsconfig плагина самодостаточен для установки из поддиректории Git.
+The `packages/` directory is added only when there is actual shared code.
+Dependencies are declared in plugin packages; npm hoisting installs shared versions
+once. The SDK version is pinned in each package, and the `bb-app` version used for
+builds is pinned at the root. Each plugin's tsconfig is self-contained so the plugin
+can be installed from a Git subdirectory.
 
-## Разработка
+## Development
 
-Используйте Node.js 24 (`nvm use`), затем из корня:
+Use Node.js 24 (`nvm use`), then run these commands from the repository root:
 
 ```sh
 npm install
@@ -45,7 +46,7 @@ npm test
 npm run build
 ```
 
-Работа с одним плагином:
+To work on a single plugin:
 
 ```sh
 npm run build --workspace=bb-plugin-project-themes
@@ -53,23 +54,24 @@ npm run dev:project-themes
 bb plugin install path:. --plugin project-themes
 ```
 
-## Добавление плагина
+## Adding a plugin
 
-1. Создайте `plugins/<id>/` с собственным `package.json`, исходниками и README.
-2. Объявите `bb.server`, при необходимости `bb.app`, branding и совместимость.
-3. Добавьте `{ "name": "<id>", "source": "./plugins/<id>" }` в `.bb/plugins.json`.
-4. Добавьте скрипты `build`, `typecheck` и `test` в пакет; общие команды и CI подхватят их.
-5. Выполните `npm install` в корне и добавьте описание в эту таблицу.
+1. Create `plugins/<id>/` with its own `package.json`, source code, and README.
+2. Declare `bb.server`, optionally `bb.app`, branding, and compatibility.
+3. Add `{ "name": "<id>", "source": "./plugins/<id>" }` to `.bb/plugins.json`.
+4. Add `build`, `typecheck`, and `test` scripts to the package; shared commands and CI will pick them up.
+5. Run `npm install` at the root and add a description to the table above.
 
-## Релизы
+## Releases
 
-Теги имеют вид `project-themes-v0.1.0`. Версии плагинов независимы;
-корневой workspace не публикуется. Push тега запускает сборку выбранного пакета
-и создаёт **черновик** GitHub Release с npm-архивом. Публикация черновика выполняется вручную.
+Tags follow the format `project-themes-v0.1.0`. Plugins are versioned independently;
+the root workspace is not published. Pushing a tag builds the selected package
+and creates a **draft** GitHub Release with an npm package archive. The draft is
+published manually.
 
-Подробные команды установки из Git, выпуска и необязательной публикации npm:
+For detailed commands covering installation from Git, releases, and optional npm publishing, see
 [docs/RELEASING.md](docs/RELEASING.md).
 
-## Лицензия
+## License
 
 [MIT](LICENSE), copyright © 2026 lumenikoly.
