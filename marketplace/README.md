@@ -19,7 +19,4 @@ Keep both files identical when editing the listing.
 
 Screenshots show the installed plugin in bb, in light and dark mode, at 2× pixel
 density. They contain no added artwork or simulated controls. Saved project
-colors were left unchanged. The workspace screenshot shows three projects with different row tints. Thread
-titles are blurred for privacy; no example titles or controls were added. The
-composer is on the new-thread screen, so this frame demonstrates row colors,
-not the active-thread background.
+colors were left unchanged. Private thread content is outside the frame.
