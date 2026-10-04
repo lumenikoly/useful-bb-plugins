@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from "react";
-import { definePluginApp, experimental_Diff as Diff, experimental_Icon as Icon, useBbContext, useRpc, type PluginThreadPanelProps } from "@get-bb/plugin-sdk/app";
+import { definePluginApp, experimental_Diff as Diff, experimental_Icon as Icon, useBbContext, useRpc, type PluginThreadPanelProps, type PluginNewThreadPanelProps } from "@get-bb/plugin-sdk/app";
 import type { Action, Change, Job, Snapshot, Target, rpcContract } from "./contracts.ts";
 import "./app.css";
 import { GitLog, Glyph } from "./log.tsx";
@@ -13,18 +13,20 @@ const statusText = (c: Change) => c.conflict ? "Conflict" : c.index === "?" ? "N
 const readSaved = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
 const save = (key: string, value: string) => { try { localStorage.setItem(key, value); } catch { /* optional preference */ } };
 
-function GitPage({ threadId: panelThreadId }: { threadId?: string }) {
+function GitPage({ threadId: panelThreadId, projectId: panelProjectId }: { threadId?: string; projectId?: string | null }) {
   const rpc = useRpc<typeof rpcContract>();
   const context = useBbContext();
   const threadId = panelThreadId ?? context.threadId ?? undefined;
+  const preferredProjectId = panelProjectId === undefined ? context.projectId : panelProjectId;
   const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
-  const [projectId, setProjectId] = useState(context.projectId ?? readSaved("bb-git-deck-project") ?? "");
+  const [projectId, setProjectId] = useState(preferredProjectId ?? readSaved("bb-git-deck-project") ?? "");
   const [targets, setTargets] = useState<Target[]>([]);
   const [targetId, setTargetId] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [revision, setRevision] = useState(0);
+  useEffect(() => { if (preferredProjectId) setProjectId(preferredProjectId); }, [preferredProjectId]);
   useEffect(() => {
     let current = true;
     void rpc.call("projects").then((result) => {
@@ -293,5 +295,6 @@ function Credential({ job, answer, cancel }: { job: Job; answer: (value: string)
 export default definePluginApp((app) => {
   app.composer.customize({ id: "git-deck-fix", scopes: ["new-thread"], banners: [{ id: "git-deck-fix-context", chrome: "bare", component: FixChatSetup }] });
   app.slots.navPanel({ id: "git-deck", title: "Git Deck", icon: "GitBranch", path: "git-deck", component: () => <GitPage /> });
+  app.slots.experimental_newThreadPanelAction({ id: "git-deck", title: "Git Deck", icon: "GitBranch", layout: "flush", component: ({ projectId }: PluginNewThreadPanelProps) => <GitPage projectId={projectId} /> });
   app.slots.threadPanelAction({ id: "git-deck", title: "Git Deck", icon: "GitBranch", component: ({ threadId }: PluginThreadPanelProps) => <GitPage threadId={threadId} />, run: ({ openPanel }) => { openPanel({ title: "Git Deck" }); } });
 });

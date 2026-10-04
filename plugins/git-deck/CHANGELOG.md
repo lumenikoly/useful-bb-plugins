@@ -15,3 +15,4 @@ Initial release as **Git Deck**. Plugin ID: `git-deck`.
 - Editable Fix it requests in BB's native composer, with repository-scoped GitHub accounts and revision/attempt checks.
 - Compact icon toolbar, English UI, responsive panes and paginated history.
 - Report operations as complete after releasing the repository lock, so consecutive actions can start reliably.
+- Open Git Deck from the new-chat panel before creating a thread, following the composer’s selected project.

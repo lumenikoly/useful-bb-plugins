@@ -3,7 +3,9 @@
 Browse branches and history, review diffs, commit changes and sync repositories
 inside BB. Git Deck follows the IntelliJ IDEA Git tool window layout: branches
 on the left, a commit graph in the center, and revision details on the right.
-Open **Git Deck** from the navigation or the thread panel menu.
+Open **Git Deck** from the navigation or the panel’s new-tab menu, including
+in an empty chat before creating a thread. The new-chat panel follows the
+project selected in the composer.
 
 ## Requirements
 
