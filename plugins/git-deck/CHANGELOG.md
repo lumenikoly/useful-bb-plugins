@@ -11,6 +11,8 @@ Initial release as **Git Deck**. Plugin ID: `git-deck`.
   and reselecting a branch preserves its commit details.
 - Merge, conflict recovery and abort, branch-tip comparisons, and commit file diffs.
 - File selection, staging, unstaging, commits, and side-by-side or unified diffs.
+- Confirmed single-file and selected-file discard, preserving staged edits in Changes
+  and restoring the index and working copy in Stage; new-file deletion is explicit.
 - Generate & Commit All uses BB's selected AI service and native commit action
   for a ready checkout, including unstaged and new files.
 - Fetch and fast-forward-only Pull prune stale remote-tracking branches; regular Push uses standard Git commands.

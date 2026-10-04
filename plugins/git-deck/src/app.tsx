@@ -78,6 +78,7 @@ function Repository({ rpc, target, threadId, onBusy }: { rpc: Rpc; target: Targe
   const [remote, setRemote] = useState("");
   const [message, setMessage] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [discard, setDiscard] = useState<{ changes: Change[]; staged: boolean } | null>(null);
   const [file, setFile] = useState<{ path: string; staged: boolean } | null>(null);
   const [patch, setPatch] = useState<string | null>(null);
   const [diffError, setDiffError] = useState("");
@@ -202,10 +203,11 @@ function Repository({ rpc, target, threadId, onBusy }: { rpc: Rpc; target: Targe
         <button className="git-file" onClick={() => showFile(c.path, isStaged)} title={c.original ? `${c.original} → ${c.path}` : c.path}>
           <span className="git-file-status" title={statusText(c)}>{c.index === "?" ? "?" : isStaged ? c.index : c.worktree}</span><span>{c.path}</span>
         </button>
+        <button className="git-file-discard" aria-label={`Discard ${c.path} (${title})`} title={isStaged ? "Discard staged and unstaged changes" : c.index === "?" ? "Delete new file" : "Discard unstaged changes"} disabled={busy} onClick={() => setDiscard({ changes: [c], staged: isStaged })}><Glyph name="undo" /></button>
       </li>)}</ul> : <p className="git-muted">{isStaged ? "Stage files to include them in the commit." : "Working directory is clean."}</p>}
-      {!!changes.length && <button className="git-stage" disabled={busy || !paths.length} onClick={() => void start({ kind: isStaged ? "unstage" : "stage", paths })}>
+      {!!changes.length && <div className="git-group-actions"><button disabled={busy || !paths.length} onClick={() => void start({ kind: isStaged ? "unstage" : "stage", paths })}>
         {isStaged ? "Unstage" : "Stage"}{paths.length ? ` · ${paths.length}` : ""}
-      </button>}
+      </button><button disabled={busy || !paths.length} onClick={() => setDiscard({ changes: changes.filter((c) => selected.has(key + c.path)), staged: isStaged })}>Discard{paths.length ? ` · ${paths.length}` : ""}</button></div>}
     </section>;
   };
   return <>
@@ -256,6 +258,10 @@ function Repository({ rpc, target, threadId, onBusy }: { rpc: Rpc; target: Targe
     {autoCommitting && <div className="git-operation" role="status">Generating a message and committing all changes…</div>}
     {job && <div className="git-operation" aria-live="polite"><div><strong>{job.state === "running" ? `${job.kind}: ${job.prompt ? "waiting for input" : "running…"}` : job.state === "done" ? `${job.kind}: done` : job.state === "cancelled" ? "Operation cancelled" : `${job.kind}: failed`}</strong>{job.state === "running" ? <button onClick={() => void cancel()}>Cancel</button> : <button onClick={() => setJob(null)}>Close</button>}</div>{job.output && <pre>{job.output}</pre>}</div>}
     {job?.prompt && <Credential key={job.prompt.id} job={job} answer={async (value) => { await rpc.call("answer", { ...input, jobId: job.id, promptId: job.prompt!.id, value }); }} cancel={cancel} />}
+    {discard && <DiscardDialog changes={discard.changes} staged={discard.staged} unborn={data.unborn} cancel={() => setDiscard(null)} confirm={() => {
+      setDiscard(null);
+      void start({ kind: "discard", paths: discard.changes.map((c) => c.path), staged: discard.staged });
+    }} />}
   </>;
 }
 
@@ -285,6 +291,20 @@ function Account({ data, busy, start, rpc, target, githubRemote }: { data: Snaps
     <p className="git-muted">Git and SSH run on the checkout’s host, using its SSH config, known_hosts, ssh-agent and credential helpers. Passwords and passphrases are entered on request and are not stored by the plugin.</p>
     <GithubAccount key={githubRemote} rpc={rpc} target={target} remote={githubRemote} />
   </div>;
+}
+
+function DiscardDialog({ changes, staged, unborn, cancel, confirm }: { changes: Change[]; staged: boolean; unborn: boolean; cancel: () => void; confirm: () => void }) {
+  const dialog = useRef<HTMLDialogElement>(null), id = useId();
+  const isNew = (c: Change) => c.index === "?" || (staged && ["A", "C"].includes(c.index)) || (!staged && c.index === " " && c.worktree === "A");
+  const allNew = changes.every(isNew);
+  useEffect(() => { const element = dialog.current!; element.showModal(); return () => element.close(); }, []);
+  return <dialog ref={dialog} className="git-credential git-discard-dialog" aria-labelledby={`${id}-title`} aria-describedby={`${id}-description`} onCancel={(e) => { e.preventDefault(); cancel(); }}>
+    <h2 id={`${id}-title`}>{allNew ? "Delete new files?" : "Discard changes?"}</h2>
+    <p id={`${id}-description`} className="git-muted">{allNew ? staged ? "These new files will be deleted from disk and removed from the stage." : "These new files will be deleted from disk." : staged ? unborn ? "These files will be deleted from disk and the stage." : "Restore these files to the last commit, including their staged and unstaged changes." : "Discard unstaged edits. Staged changes will be kept."} This cannot be undone.</p>
+    <ul className="git-discard-files">{changes.map((c) => <li key={c.path}><span>{c.original && staged && c.index === "R" ? `${c.path} → ${c.original}` : c.path}</span><small>{isNew(c) ? "Delete" : "Restore"}</small></li>)}</ul>
+    {!allNew && changes.some(isNew) && <p className="git-muted">Files marked Delete will be deleted from disk.</p>}
+    <div className="git-credential-actions"><button type="button" autoFocus onClick={cancel}>Cancel</button><button type="button" className="git-discard-confirm" onClick={confirm}>{allNew ? "Delete files" : "Discard changes"}</button></div>
+  </dialog>;
 }
 
 function Credential({ job, answer, cancel }: { job: Job; answer: (value: string) => Promise<void>; cancel: () => Promise<void> }) {

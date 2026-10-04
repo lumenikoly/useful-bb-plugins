@@ -140,6 +140,13 @@ behavior. Controls disable while it runs, a bottom status shows progress, and
 success exposes the generated subject and hash. Unsupported checkouts show a
 disabled button with guidance to select a checkout associated with a BB chat.
 
+Changes file rows include a muted undo icon, always available with an accessible
+label and tooltip. Stage/Unstage and selected-file Discard share a compact action
+row. Discard uses the same native modal: Cancel receives initial focus, the exact
+file list shows Restore/Delete, and text explains whether staged edits are kept
+or rolled back. New-file deletion is explicit; destructive confirmation uses the
+host error text color. Long paths wrap and the list scrolls within the modal.
+
 Branch actions and Git/SSH prompts share native modal styling and explicit labels. New branch offers HEAD and grouped local/remote sources; opening from a row preselects that branch, while opening from a commit preserves its revision. Delete confirmation focuses Cancel and uses Git's merged-history check; checked-out branches are protected. Credential prompts use password inputs where required. Operation output stays in a compact bottom strip; merge recovery uses a muted amber banner and labeled actions.
 
 ## Do's and Don'ts

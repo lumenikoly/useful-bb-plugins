@@ -15,6 +15,12 @@ to `bb: automated commit` if generation fails or AI is off. Only ready BB
 environments associated with the exact selected checkout can use this action.
 Do not use it when the checkout contains unrelated work.
 
+Discard requires confirmation. In Changes it restores selected tracked files
+from the index, preserving staged edits; in Stage it restores the selected index
+and working copy to HEAD. New files are deleted. Renames restore the original
+path unless it contains other changes. Submodules require opening their own
+checkout. Never discard unrelated work.
+
 Commit identity uses local `user.name` and `user.email`. SSH identity follows
 the remote host alias in the checkout host's `~/.ssh/config`, or local
 `core.sshCommand`. These settings are shared across repository worktrees.

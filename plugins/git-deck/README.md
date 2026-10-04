@@ -68,6 +68,15 @@ Select a project and checkout; a thread panel starts with its own environment.
 Open **Changes**, select files and stage them. Unstaging preserves the working
 copy. Select a file to review a side-by-side or unified diff.
 
+Use the file row's undo icon or select files and choose **Discard**. A confirmation
+lists exactly which files will be restored or deleted, with Cancel focused.
+In **Changes**, discard restores the working copy from the index and keeps staged
+edits. In **Stage**, it restores the selected files and index to the last commit,
+including unstaged edits to those files. New files are deleted; in a repository
+without commits, discarding staged additions also deletes them. Renames restore
+the original path unless another changed file occupies it. Unselected files are
+preserved. Open a submodule's checkout to discard its changes.
+
 **Commit** includes the entire current index, including changes staged in a
 terminal or another IDE. Git hooks and commit signing run through system Git;
 GPG and pinentry remain system-managed.
@@ -169,9 +178,10 @@ npm test --workspace=bb-plugin-git-deck
 npm run build --workspace=bb-plugin-git-deck
 ```
 
-Four integration tests cover Git workflows, per-repository settings, encrypted
-OpenSSH keys and interactive askpass, tracking branches and merge recovery, plus
-GitHub account scoping, bounded logs and revision guards. Release instructions:
+Six integration tests cover Git workflows, selected-file rollback and staged
+preservation, per-repository settings, encrypted OpenSSH keys and interactive
+askpass, tracking branches and merge recovery, GitHub account scoping, bounded
+logs and revision guards, plus BB's native automatic commit integration. Release instructions:
 [docs/RELEASING.md](../../docs/RELEASING.md).
 
 [MIT license](LICENSE).

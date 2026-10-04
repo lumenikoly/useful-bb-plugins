@@ -1,7 +1,8 @@
 # Add Git Deck
 
 Git Deck adds a Git page and thread panel with a branch browser, commit graph,
-revision details, file diffs, staging, commits and Fetch/Pull/Push. Compact row
+revision details, file diffs, staging, confirmed file rollback, commits and
+Fetch/Pull/Push. Compact row
 actions offer branch creation, confirmed local deletion and a branch menu; the
 creation dialog includes a source selector. Fetch and Pull prune stale
 remote-tracking branches. Generate & Commit All invokes BB's native AI-assisted
@@ -22,13 +23,14 @@ in BB's native composer.
 
 ## Validation
 
-- Plugin typecheck, five focused integration tests and BB build pass.
+- Plugin typecheck, six focused integration tests and BB build pass.
 - The built npm archive includes the app, server and host bundles and metadata,
   source, skill, license and documentation; tests and screenshots are excluded.
 - Installed in BB under the new ID and verified with real Git and GitHub data.
 - Marketplace schema/build, overview and image checks, and v1 compatibility gate
-  pass in a current full-history marketplace checkout.
-- Existing marketplace tests pass.
+  passed during earlier preparation; the updated overview copy and image
+  constraints pass locally. Refresh upstream registry checks before submission.
+- Existing marketplace tests passed during earlier preparation.
 - Preparation prerequisite: the first release tag must be published and the
   marketplace source liveness check must pass before this PR is opened. No release
   or marketplace PR has been published during preparation.

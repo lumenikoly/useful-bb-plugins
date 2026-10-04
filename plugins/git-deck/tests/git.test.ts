@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -99,6 +99,94 @@ test("real repositories: literal staging, unborn unstage, rename, accounts and p
   } finally { await harness.experimental_dispose(); await rm(dir, { recursive: true, force: true }); }
 });
 
+test("discard: selected files only, staged preservation, additions, deletions, renames and preflight guards", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "bb-git-deck-discard-")), repo = join(dir, "repo");
+  const harness = experimental_createHostEntryHarness(host);
+  const discard = async (paths: string[], staged: boolean, expected = "done") => {
+    const job = await harness.experimental_call("start", { path: repo, action: { kind: "discard", paths, staged } });
+    const result = await until(harness, repo, job, (j) => j.state !== "running");
+    assert.equal(result.state, expected, result.output);
+    return result.output;
+  };
+  const missing = async (p: string) => assert.rejects(lstat(join(repo, p)), { code: "ENOENT" });
+  try {
+    await init(repo);
+    await writeFile(join(repo, "initial"), "new\n");
+    await git(repo, ["add", "initial"]);
+    await writeFile(join(repo, "initial"), "edited after staging\n");
+    await discard(["initial"], true);
+    await missing("initial");
+    assert.equal((await git(repo, ["ls-files"])).stdout, "");
+
+    for (const p of ["file", "deleted", "unrelated"]) await writeFile(join(repo, p), "base\n");
+    await git(repo, ["add", "--all"]);
+    await git(repo, ["commit", "-m", "Base"]);
+    await writeFile(join(repo, "file"), "staged\n");
+    await git(repo, ["add", "file"]);
+    await writeFile(join(repo, "file"), "unstaged\n");
+    await writeFile(join(repo, "unrelated"), "keep me\n");
+    await discard(["file", "not-modified"], false, "failed");
+    assert.equal(await readFile(join(repo, "file"), "utf8"), "unstaged\n");
+    await discard(["file"], false);
+    assert.equal(await readFile(join(repo, "file"), "utf8"), "staged\n");
+    assert.equal((await git(repo, ["show", ":file"])).stdout, "staged\n");
+    await discard(["file"], true);
+    assert.equal(await readFile(join(repo, "file"), "utf8"), "base\n");
+    assert.equal(await readFile(join(repo, "unrelated"), "utf8"), "keep me\n");
+    await rm(join(repo, "deleted"));
+    await discard(["deleted"], false);
+    assert.equal(await readFile(join(repo, "deleted"), "utf8"), "base\n");
+    await git(repo, ["rm", "deleted"]);
+    await discard(["deleted"], true);
+    assert.equal(await readFile(join(repo, "deleted"), "utf8"), "base\n");
+
+    const literal = ":(glob)*.txt", newline = "line\n'quote.txt";
+    await mkdir(join(repo, "nested"));
+    for (const p of [literal, newline, "nested/new.txt"]) await writeFile(join(repo, p), "delete me\n");
+    await writeFile(join(dir, "outside"), "keep outside\n");
+    await symlink(join(dir, "outside"), join(repo, "link"));
+    await discard([literal, newline, "nested/new.txt", "link"], false);
+    for (const p of [literal, newline, "nested/new.txt", "link"]) await missing(p);
+    assert.equal(await readFile(join(dir, "outside"), "utf8"), "keep outside\n");
+    await writeFile(join(repo, "added"), "new staged\n");
+    await git(repo, ["add", "added"]);
+    await writeFile(join(repo, "added"), "new unstaged\n");
+    await discard(["added"], true);
+    await missing("added");
+    await writeFile(join(repo, "intent"), "intent-to-add\n");
+    await git(repo, ["add", "-N", "intent"]);
+    await discard(["intent"], false);
+    await missing("intent");
+
+    await git(repo, ["mv", "file", "renamed"]);
+    await writeFile(join(repo, "renamed"), "rename unstaged\n");
+    await discard(["renamed"], false);
+    assert.equal(await readFile(join(repo, "renamed"), "utf8"), "base\n");
+    await missing("file");
+    await writeFile(join(repo, "file"), "keep original path\n");
+    assert.match(await discard(["renamed"], true, "failed"), /original rename path has changes/);
+    assert.equal(await readFile(join(repo, "file"), "utf8"), "keep original path\n");
+    await rm(join(repo, "file"));
+    await writeFile(join(repo, ".git/info/exclude"), "file\n");
+    await writeFile(join(repo, "file"), "keep ignored file\n");
+    assert.match(await discard(["renamed"], true, "failed"), /occupies the original rename path/);
+    assert.equal(await readFile(join(repo, "file"), "utf8"), "keep ignored file\n");
+    await rm(join(repo, "file"));
+    await discard(["renamed"], true);
+    await missing("renamed");
+    assert.equal(await readFile(join(repo, "file"), "utf8"), "base\n");
+
+    const head = (await git(repo, ["rev-parse", "HEAD"])).stdout.trim();
+    await git(repo, ["update-index", "--add", "--cacheinfo", `160000,${head},submodule`]);
+    assert.match(await discard(["unrelated", "submodule"], false, "failed"), /submodule/);
+    assert.match(await discard(["submodule"], true, "failed"), /submodule/);
+    await init(join(repo, "nested-repo"));
+    await git(join(repo, "nested-repo"), ["commit", "--allow-empty", "-m", "Nested"]);
+    assert.match(await discard(["nested-repo/"], false, "failed"), /individual files/);
+    assert.equal(await readFile(join(repo, "unrelated"), "utf8"), "keep me\n");
+  } finally { await harness.experimental_dispose(); await rm(dir, { recursive: true, force: true }); }
+});
+
 test("askpass: real OpenSSH encrypted key, UI job prompt, wrong reply ID and cancellation", async () => {
   const dir = await mkdtemp(join(tmpdir(), "bb-git-deck-auth-"));
   const fixture = "fixture-only-passphrase";
@@ -193,6 +281,7 @@ test("branches: tracking and pruning, log topology, revision diffs, safe deletio
     state = await harness.experimental_call("snapshot", { path: repo });
     assert.equal(state.merging, true);
     assert.equal(state.changes[0].conflict, true);
+    await run({ kind: "discard", paths: ["file.txt"], staged: false }, "failed");
     await run({ kind: "merge-abort" });
     assert.equal((await harness.experimental_call("snapshot", { path: repo })).merging, false);
     await run({ kind: "merge", branch: "refs/heads/feature/work" }, "failed");

@@ -9,7 +9,10 @@ row actions let you create from a branch or confirm a local deletion directly;
 the creation dialog also lets you choose the source branch.
 
 Stage selected files, review side-by-side or unified diffs, and commit the current
-index. Fetch, Push and fast-forward-only Pull use standard Git on the checkout's
+index. Discard changes from an individual file row or the selected files, with
+confirmation. Changes preserves staged edits; Stage restores both the index and
+working copy to the last commit. New files are explicitly marked for deletion.
+Fetch, Push and fast-forward-only Pull use standard Git on the checkout's
 host. Fetch and Pull prune stale remote-tracking branches. Merge a branch into
 the current branch, resolve conflicts in your editor,
 then complete or abort the merge from the panel. Git hooks and signing settings

@@ -1,4 +1,6 @@
 import { spawn } from "node:child_process";
+import { lstat } from "node:fs/promises";
+import { join } from "node:path";
 import type { Action, Change, Snapshot, Branch, Commit, Inspection } from "./contracts.ts";
 
 export async function git(path: string, args: string[], options: {
@@ -124,6 +126,49 @@ export async function perform(path: string, action: Action, options: Parameters<
       const head = await git(path, ["rev-parse", "--verify", "--quiet", "HEAD"], { signal: options?.signal, allowed: [0, 1] });
       await run(head.code === 0 ? ["reset", "--quiet", "HEAD", "--", ...paths] : ["rm", "--cached", "--quiet", "--", ...paths]);
     }
+  } else if (action.kind === "discard") {
+    const status = parseStatus((await git(path, ["status", "--porcelain=v1", "-z", "--untracked-files=all"], { signal: options?.signal })).stdout);
+    const changes = [...new Set(action.paths)].map((p) => {
+      const change = status.find((c) => c.path === p);
+      if (!change || (action.staged ? " ?".includes(change.index) : change.worktree === " ")) {
+        throw new Error(`The file has changed status. Refresh before discarding: ${p}`);
+      }
+      if (change.conflict) throw new Error(`Resolve the conflict before discarding: ${p}`);
+      return change;
+    });
+    // Intent-to-add has an empty index blob, but no staged content to preserve.
+    const additions = changes.filter((c) => !action.staged && c.index === " " && c.worktree === "A").map((c) => c.path);
+    const originals = new Set<string>();
+    const tracked = changes.filter((c) => c.index !== "?" && !additions.includes(c.path)).flatMap((c) => {
+      const original = (action.staged ? c.index : c.worktree) === "R" ? c.original : null;
+      // Restoring a rename must not overwrite a new file at its original path.
+      if (original && status.some((other) => other.path === original)) {
+        throw new Error(`The original rename path has changes. Resolve them before discarding: ${original}`);
+      }
+      if (original) originals.add(original);
+      return [c.path, ...(original ? [original] : [])];
+    });
+    const untracked = changes.filter((c) => c.index === "?").map((c) => c.path);
+    const paths = [...new Set([...tracked, ...untracked, ...additions])];
+    const head = await git(path, ["rev-parse", "--verify", "--quiet", "HEAD"], { signal: options?.signal, allowed: [0, 1] });
+    const entries = (await git(path, ["ls-files", "--stage", "-z", "--", ...paths], { signal: options?.signal })).stdout;
+    const tree = head.code === 0 ? (await git(path, ["ls-tree", "-z", head.stdout.trim(), "--", ...paths], { signal: options?.signal })).stdout : "";
+    if ([...entries.split("\0"), ...tree.split("\0")].some((entry) => entry.startsWith("160000 "))) {
+      throw new Error("Open the submodule's checkout to discard its changes.");
+    }
+    // Preflight the entire selection before any destructive command. Never clean a directory.
+    for (const p of paths) {
+      try {
+        if ((await lstat(join(path, p))).isDirectory()) throw new Error(`Discard individual files inside this directory: ${p}`);
+        if (originals.has(p)) throw new Error(`A file occupies the original rename path. Move it before discarding: ${p}`);
+      } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+    }
+    if (tracked.length) {
+      if (action.staged && head.code !== 0) await run(["rm", "--force", "--", ...tracked]);
+      else await run(["restore", "--no-recurse-submodules", ...(action.staged ? [`--source=${head.stdout.trim()}`, "--staged"] : []), "--worktree", "--", ...tracked]);
+    }
+    if (additions.length) await run(["rm", "--force", "--", ...additions]);
+    if (untracked.length) await run(["clean", "--force", "--", ...untracked]);
   } else if (action.kind === "commit") await run(["commit", "-m", action.message]);
   else if (action.kind === "pull") await run(["pull", "--ff-only", "--prune"]);
   else if (action.kind === "fetch" || action.kind === "push" || action.kind === "remote") {
