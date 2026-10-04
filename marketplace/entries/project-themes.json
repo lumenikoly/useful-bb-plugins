@@ -1,0 +1,32 @@
+{
+  "id": "project-themes",
+  "displayName": "Project Themes",
+  "description": "Recognize each project by its color. Choose from eight muted presets or pick your own, then tint thread rows, browser tabs and the workspace background. Turn each tint on or off independently.",
+  "icon": "Palette",
+  "category": "themes-and-appearance",
+  "tags": [
+    "colors",
+    "projects",
+    "sidebar",
+    "tabs",
+    "customization"
+  ],
+  "author": {
+    "name": "lumenikoly",
+    "github": "lumenikoly",
+    "url": "https://github.com/lumenikoly"
+  },
+  "source": {
+    "git": {
+      "url": "https://github.com/lumenikoly/useful-bb-plugins.git",
+      "subdir": "plugins/project-themes",
+      "range": "^0.1.0",
+      "tagPrefix": "project-themes-"
+    }
+  },
+  "screenshots": [
+    "./screenshots/project-themes/settings-light.png",
+    "./screenshots/project-themes/settings-dark.png"
+  ],
+  "overview": "./overview/project-themes.md"
+}
