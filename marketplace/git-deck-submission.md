@@ -4,7 +4,8 @@ Git Deck adds a Git page and thread panel with a branch browser, commit graph,
 revision details, file diffs, staging, commits and Fetch/Pull/Push. Compact row
 actions offer branch creation, confirmed local deletion and a branch menu; the
 creation dialog includes a source selector. Fetch and Pull prune stale
-remote-tracking branches. Repository-local
+remote-tracking branches. Generate & Commit All invokes BB's native AI-assisted
+commit of all changes for a ready checkout. Repository-local
 author and SSH settings use system Git and OpenSSH. An optional GitHub Actions
 view uses GitHub CLI to inspect failed jobs and prepare editable Fix it requests
 in BB's native composer.
@@ -21,7 +22,7 @@ in BB's native composer.
 
 ## Validation
 
-- Plugin typecheck, four existing integration tests and BB build pass.
+- Plugin typecheck, five focused integration tests and BB build pass.
 - The built npm archive includes the app, server and host bundles and metadata,
   source, skill, license and documentation; tests and screenshots are excluded.
 - Installed in BB under the new ID and verified with real Git and GitHub data.

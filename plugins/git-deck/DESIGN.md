@@ -133,6 +133,13 @@ Fix it prepares a reviewable request. In a matching thread, the user can add it 
 
 ### Dialogs and operation feedback
 
+Changes keeps manual index commits and adds a full-width secondary **Generate &
+Commit All** button below the commit footer. Its label states the all-files scope;
+the tooltip explains new and unstaged files. BB supplies generation and commit
+behavior. Controls disable while it runs, a bottom status shows progress, and
+success exposes the generated subject and hash. Unsupported checkouts show a
+disabled button with guidance to select a checkout associated with a BB chat.
+
 Branch actions and Git/SSH prompts share native modal styling and explicit labels. New branch offers HEAD and grouped local/remote sources; opening from a row preselects that branch, while opening from a commit preserves its revision. Delete confirmation focuses Cancel and uses Git's merged-history check; checked-out branches are protected. Credential prompts use password inputs where required. Operation output stays in a compact bottom strip; merge recovery uses a muted amber banner and labeled actions.
 
 ## Do's and Don'ts

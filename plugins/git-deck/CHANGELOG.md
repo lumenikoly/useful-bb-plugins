@@ -11,6 +11,8 @@ Initial release as **Git Deck**. Plugin ID: `git-deck`.
   and reselecting a branch preserves its commit details.
 - Merge, conflict recovery and abort, branch-tip comparisons, and commit file diffs.
 - File selection, staging, unstaging, commits, and side-by-side or unified diffs.
+- Generate & Commit All uses BB's selected AI service and native commit action
+  for a ready checkout, including unstaged and new files.
 - Fetch and fast-forward-only Pull prune stale remote-tracking branches; regular Push uses standard Git commands.
 - Repository-specific author identity and SSH command settings, system SSH aliases, keys, agent and credential helpers.
 - Interactive passwords, passphrases and SSH host-key confirmation; guidance for HTTPS remotes.

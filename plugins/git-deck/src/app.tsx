@@ -73,6 +73,7 @@ function Repository({ rpc, target, threadId, onBusy }: { rpc: Rpc; target: Targe
   const [data, setData] = useState<Snapshot | null>(null);
   const [error, setError] = useState("");
   const [starting, setStarting] = useState(false);
+  const [autoCommitting, setAutoCommitting] = useState(false);
   const [job, setJob] = useState<Job | null>(null);
   const [remote, setRemote] = useState("");
   const [message, setMessage] = useState("");
@@ -86,7 +87,7 @@ function Repository({ rpc, target, threadId, onBusy }: { rpc: Rpc; target: Targe
   const alive = useRef(true), request = useRef(0);
   const messageId = useId();
   const panelId = useId();
-  const busy = starting || job?.state === "running";
+  const busy = starting || autoCommitting || job?.state === "running";
   useEffect(() => { onBusy(busy); return () => onBusy(false); }, [busy, onBusy]);
   useEffect(() => { alive.current = true; return () => { alive.current = false; request.current++; }; }, []);
   const refresh = useCallback(async () => {
@@ -167,6 +168,18 @@ function Repository({ rpc, target, threadId, onBusy }: { rpc: Rpc; target: Targe
     if (!job) return;
     try { await rpc.call("cancel", { ...input, jobId: job.id }); } catch (e) { setError(errorText(e)); }
   }
+  async function autoCommit() {
+    if (busy) return;
+    setAutoCommitting(true); setError(""); setJob(null);
+    try {
+      const result = await rpc.call("autoCommit", input);
+      if (alive.current) {
+        setMessage(""); setSelected(new Set());
+        setJob({ id: result.commitSha, kind: "Auto Commit", state: "done", output: `${result.commitSubject}\n${result.commitSha}`, prompt: null });
+      }
+    } catch (e) { if (alive.current) setError(errorText(e)); }
+    finally { if (alive.current) { await refresh(); setAutoCommitting(false); } }
+  }
   const toggle = (key: string) => setSelected((previous) => { const next = new Set(previous); if (next.has(key)) next.delete(key); else next.add(key); return next; });
   const showFile = (path: string, isStaged: boolean) => { setFile({ path, staged: isStaged }); setTab("diff"); };
   if (!data) return <div className="git-empty" role="status">{error ? <><p className="git-error" role="alert">{error}</p><button onClick={() => { setError(""); void refresh(); }}>Retry</button></> : "Loading Git status…"}</div>;
@@ -228,6 +241,7 @@ function Repository({ rpc, target, threadId, onBusy }: { rpc: Rpc; target: Targe
           <label htmlFor={messageId}>Commit message</label>
           <textarea id={messageId} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="What changed and why?" disabled={busy} rows={4} maxLength={65536} />
           <div className="git-commit-footer"><button type="button" className="git-identity" onClick={() => setTab("account")} title={`${data.config.name} <${data.config.email}>`}>{data.config.name || "Set up author"}</button><button className="git-primary" disabled={busy || !message.trim() || !index.length || !!conflicts.length}>Commit · {index.length}</button></div>
+          <button type="button" className="git-auto-commit" disabled={busy || !target.canAutoCommit || !data.changes.length || !!conflicts.length || data.merging} title={target.canAutoCommit ? "Generate a message using BB's AI service and commit all changed files, including unstaged and new files." : "Select a checkout associated with a BB chat to use automatic commits."} onClick={() => void autoCommit()}>{autoCommitting ? "Committing…" : "Generate & Commit All"}</button>
         </form>
       </aside>
       <main className="git-inspector">
@@ -239,6 +253,7 @@ function Repository({ rpc, target, threadId, onBusy }: { rpc: Rpc; target: Targe
         </div>
       </main>
     </div>
+    {autoCommitting && <div className="git-operation" role="status">Generating a message and committing all changes…</div>}
     {job && <div className="git-operation" aria-live="polite"><div><strong>{job.state === "running" ? `${job.kind}: ${job.prompt ? "waiting for input" : "running…"}` : job.state === "done" ? `${job.kind}: done` : job.state === "cancelled" ? "Operation cancelled" : `${job.kind}: failed`}</strong>{job.state === "running" ? <button onClick={() => void cancel()}>Cancel</button> : <button onClick={() => setJob(null)}>Close</button>}</div>{job.output && <pre>{job.output}</pre>}</div>}
     {job?.prompt && <Credential key={job.prompt.id} job={job} answer={async (value) => { await rpc.call("answer", { ...input, jobId: job.id, promptId: job.prompt!.id, value }); }} cancel={cancel} />}
   </>;

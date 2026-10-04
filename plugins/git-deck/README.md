@@ -72,6 +72,15 @@ copy. Select a file to review a side-by-side or unified diff.
 terminal or another IDE. Git hooks and commit signing run through system Git;
 GPG and pinentry remain system-managed.
 
+**Generate & Commit All** uses BB's built-in commit action: generate a message
+with the service selected in **Settings → AI services → Commit message**, stage
+all changed files (including unstaged and new files), and commit immediately.
+There is no message review step. If AI is disabled or generation fails, BB uses
+`bb: automated commit`. This action requires a ready BB environment for the
+selected checkout; main checkouts work when a BB chat uses that same path.
+The button is disabled during another operation or a merge. The generated
+subject and commit hash appear in the operation output after success.
+
 The toolbar provides Fetch, Pull, Push, Refresh and the **Account and SSH** gear.
 Fetch uses the selected remote. Fetch and Pull prune stale remote-tracking
 branches using Git's standard `--prune` behavior. Pull is fast-forward-only and

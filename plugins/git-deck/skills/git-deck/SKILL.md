@@ -8,6 +8,13 @@ system Git and has no separate agent tool or CLI command. Use ordinary `git`
 commands in the selected checkout and preserve the existing index: the UI's
 Commit action commits the entire index. Do not stage unrelated changes.
 
+Generate & Commit All is different: it calls BB's native environment commit,
+which stages every change and generates a message using the selected Commit
+message AI service. It commits immediately, with no text review. BB falls back
+to `bb: automated commit` if generation fails or AI is off. Only ready BB
+environments associated with the exact selected checkout can use this action.
+Do not use it when the checkout contains unrelated work.
+
 Commit identity uses local `user.name` and `user.email`. SSH identity follows
 the remote host alias in the checkout host's `~/.ssh/config`, or local
 `core.sshCommand`. These settings are shared across repository worktrees.

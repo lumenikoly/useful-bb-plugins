@@ -89,7 +89,7 @@ export const hostContract = defineRpcContract({
   answer: { input: answerInput, output: z.null() },
   cancel: { input: jobInput, output: z.null() },
 });
-export const targetSchema = z.object({ id: z.string(), projectId: z.string(), hostId: z.string(), path: text, label: z.string() });
+export const targetSchema = z.object({ id: z.string(), projectId: z.string(), hostId: z.string(), path: text, label: z.string(), canAutoCommit: z.boolean().default(false) });
 export type Target = z.infer<typeof targetSchema>;
 const targetInput = z.object({ projectId: z.string(), targetId: z.string() });
 export const rpcContract = defineRpcContract({
@@ -100,6 +100,7 @@ export const rpcContract = defineRpcContract({
   githubFix: { input: targetInput.extend({ ...logFieldsGithub, head: hash }), output: githubFix },
   projects: { input: z.null(), output: z.array(z.object({ id: z.string(), name: z.string() })) },
   targets: { input: z.object({ projectId: z.string(), threadId: z.string().optional() }), output: z.array(targetSchema) },
+  autoCommit: { input: targetInput, output: z.object({ commitSha: hash, commitSubject: z.string().max(65536) }) },
   snapshot: { input: targetInput, output: snapshotSchema },
   log: { input: targetInput.extend(logFields), output: logSchema },
   inspect: { input: targetInput.extend(inspectFields), output: inspectSchema },

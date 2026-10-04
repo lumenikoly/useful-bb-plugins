@@ -15,6 +15,12 @@ the current branch, resolve conflicts in your editor,
 then complete or abort the merge from the panel. Git hooks and signing settings
 continue to apply.
 
+Use **Generate & Commit All** for BB's built-in message generation and immediate
+commit of all changed files, including new and unstaged files. It follows the
+Commit message service in BB's AI services settings and requires a ready BB
+environment for the selected checkout. If AI is off or generation fails, BB
+uses `bb: automated commit`. Manual Commit continues to commit only the index.
+
 ## Accounts and system SSH
 
 Set an author name, email and optional SSH command per repository. Settings are
