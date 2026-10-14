@@ -44,7 +44,7 @@ function graph(commits: Commit[]) {
   });
 }
 
-export function GitLog({ rpc, target, data, busy, start }: { rpc: Rpc; target: Target; data: Snapshot; busy: boolean; start: (action: Action) => Promise<void> }) {
+export function GitLog({ rpc, target, data, busy, start }: { rpc: Rpc; target: Target; data: Snapshot; busy: boolean; start: (action: Action, waitForCompletion?: boolean) => Promise<void> }) {
   const input = { projectId: target.projectId, targetId: target.id };
   const [ref, setRef] = useState("");
   const shell = useRef<HTMLDivElement>(null);
@@ -181,7 +181,7 @@ export function GitLog({ rpc, target, data, busy, start }: { rpc: Rpc; target: T
     {messageOpen && detail && <CommitMessage message={detail.message} close={() => setMessageOpen(false)} />}
     {dialog && <BranchDialog key={`${dialog.kind}:${dialog.branch}`} value={dialog} current={data.branch} branches={data.refs} close={() => setDialog(null)} submit={async (name, from) => {
       const action: Action = dialog.kind === "create" || dialog.kind === "track" ? { kind: "branch-create", name, from, track: dialog.kind === "track" } : dialog.kind === "rename" ? { kind: "branch-rename", branch: dialog.branch, name } : { kind: dialog.kind === "delete" ? "branch-delete" : "merge", branch: dialog.branch };
-      await start(action); setDialog(null);
+      await start(action, true); setDialog(null);
     }} />}
   </div>;
 }
@@ -255,5 +255,5 @@ function BranchDialog({ value, current, branches, close, submit }: { value: { ki
     </select></>}
     <p className="git-muted">{value.kind === "delete" ? "Git will only delete the branch if its commits have been merged. The remote branch will remain on the server." : value.kind === "merge" ? "The selected branch will be merged into the current branch. If conflicts occur, you can complete or abort the merge in Changes." : value.kind === "track" ? "A local tracking branch will be created and checked out." : value.kind === "create" ? "A branch will be created from the selected revision and checked out." : "The new name applies to the local branch."}</p>
     {error && <p className="git-error" role="alert">{error}</p>}
-    <div className="git-credential-actions"><button type="button" autoFocus={!editable} onClick={close} disabled={pending}>Cancel</button><button className="git-primary" disabled={pending || editable && !name.trim()}>{pending ? "Starting…" : value.kind === "delete" ? "Delete" : value.kind === "merge" ? "Merge" : value.kind === "rename" ? "Rename" : "Create and checkout"}</button></div></form></dialog>;
+    <div className="git-credential-actions"><button type="button" autoFocus={!editable} onClick={close} disabled={pending}>Cancel</button><button className="git-primary" disabled={pending || editable && !name.trim()}>{pending ? value.kind === "create" || value.kind === "track" ? "Creating branch…" : "Working…" : value.kind === "delete" ? "Delete" : value.kind === "merge" ? "Merge" : value.kind === "rename" ? "Rename" : "Create and checkout"}</button></div></form></dialog>;
 }

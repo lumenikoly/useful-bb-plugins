@@ -42,7 +42,8 @@ explicit action.
 
 - Use **Branches +**, the row’s **+**, or **… → Create branch from here**; choose HEAD, a local branch,
   or a remote branch in **New branch → Create from**. A selected commit is also
-  available when opening the dialog from commit details.
+  available when opening the dialog from commit details. The dialog stays open
+  until Git finishes; failures remain in the dialog so you can correct the input.
 - Check out a remote branch by creating a local tracking branch.
 - Delete a local branch using its **…** menu and confirmation dialog.
   Git protects unmerged commits; current branches and branches checked out in

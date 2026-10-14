@@ -89,6 +89,7 @@ function Repository({ rpc, target, threadId, onBusy, contextControls, checkoutCo
   const [tab, setTab] = useState<"diff" | "history" | "checks" | "account">("history");
 
   const alive = useRef(true), request = useRef(0);
+  const operationWaiter = useRef<{ id: string; resolve: () => void; reject: (error: Error) => void } | null>(null);
   const messageId = useId();
   const panelId = useId();
   const busy = starting || autoCommitting || job?.state === "running";
@@ -100,7 +101,11 @@ function Repository({ rpc, target, threadId, onBusy, contextControls, checkoutCo
     return () => clearTimeout(timer);
   }, [job?.id, job?.state]);
   useEffect(() => { onBusy(busy); return () => onBusy(false); }, [busy, onBusy]);
-  useEffect(() => { alive.current = true; return () => { alive.current = false; request.current++; }; }, []);
+  useEffect(() => { alive.current = true; return () => {
+    alive.current = false; request.current++;
+    operationWaiter.current?.reject(new Error("Checkout changed before the operation finished. Check Git status."));
+    operationWaiter.current = null;
+  }; }, []);
   const refresh = useCallback(async () => {
     const revision = ++request.current;
     try {
@@ -128,6 +133,15 @@ function Repository({ rpc, target, threadId, onBusy, contextControls, checkoutCo
     return () => window.removeEventListener("focus", focus);
   }, [refresh]);
   useEffect(() => {
+    const waiter = operationWaiter.current;
+    if (!waiter || !job || waiter.id !== job.id || job.state === "running") return;
+    operationWaiter.current = null;
+    void refresh().then(() => {
+      if (job.state === "done") waiter.resolve();
+      else waiter.reject(new Error(job.output || (job.state === "cancelled" ? "Operation cancelled." : "Git operation failed.")));
+    });
+  }, [job?.id, job?.state, refresh]);
+  useEffect(() => {
     if (!job || job.state !== "running") return;
     let current = true;
     let timer: ReturnType<typeof setTimeout>;
@@ -139,7 +153,7 @@ function Repository({ rpc, target, threadId, onBusy, contextControls, checkoutCo
         if (next.state !== "running") {
           setSelected(new Set());
           if (next.state === "done" && next.kind === "commit") setMessage("");
-          await refresh();
+          if (operationWaiter.current?.id !== next.id) await refresh();
           return;
         }
       } catch (e) {
@@ -147,7 +161,7 @@ function Repository({ rpc, target, threadId, onBusy, contextControls, checkoutCo
           setError(errorText(e));
           if (errorText(e).includes("Operation not found")) {
             setJob({ ...job, state: "failed", prompt: null, output: "Connection to the operation was lost. Check Git status before trying again." });
-            await refresh();
+            if (operationWaiter.current?.id !== job.id) await refresh();
             return;
           }
         }
@@ -166,13 +180,25 @@ function Repository({ rpc, target, threadId, onBusy, contextControls, checkoutCo
     }, (e) => { if (current) setDiffError(errorText(e)); });
     return () => { current = false; };
   }, [rpc, target.projectId, target.id, file, data]);
-  async function start(action: Action) {
-    if (busy) return;
+  async function start(action: Action, waitForCompletion = false) {
+    if (busy) {
+      if (waitForCompletion) throw new Error("A Git operation is already running. Wait for it to finish.");
+      return;
+    }
     setStarting(true); setError("");
     try {
       const next = await rpc.call("start", { ...input, action });
-      if (alive.current) setJob(next);
-    } catch (e) { if (alive.current) setError(errorText(e)); }
+      if (!alive.current) throw new Error("Checkout changed before the operation started. Check Git status.");
+      setJob(next);
+      if (waitForCompletion) {
+        if (next.state === "running") await new Promise<void>((resolve, reject) => { operationWaiter.current = { id: next.id, resolve, reject }; });
+        else if (next.state !== "done") throw new Error(next.output || "Git operation failed.");
+        else await refresh();
+      }
+    } catch (e) {
+      if (waitForCompletion) throw e;
+      if (alive.current) setError(errorText(e));
+    }
     finally { if (alive.current) setStarting(false); }
   }
   async function cancel() {
