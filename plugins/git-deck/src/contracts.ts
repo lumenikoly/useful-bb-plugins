@@ -6,6 +6,7 @@ const ref = text.min(1).refine((s) => !s.startsWith("-"), "Options are not allow
 const file = text.min(1).refine((s) => !s.startsWith("/") && !s.split("/").includes(".."), "Use repository-relative paths");
 export const actionSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.enum(["stage", "unstage"]), paths: z.array(file).min(1).max(1000) }).strict(),
+  z.object({ kind: z.literal("stage-part"), pathspec: file, staged: z.boolean(), expectedPatch: z.string().min(1).max(4 * 1024 * 1024), lines: z.array(z.number().int().nonnegative()).min(1).max(100000) }).strict(),
   z.object({ kind: z.literal("discard"), paths: z.array(file).min(1).max(1000), staged: z.boolean() }).strict(),
   z.object({ kind: z.literal("commit"), message: z.string().trim().min(1).max(65536).refine((s) => !s.includes("\0")) }).strict(),
   z.object({ kind: z.enum(["fetch", "push"]), remote: ref }).strict(),

@@ -59,7 +59,7 @@ components:
 
 **Creative North Star: "BB's native Git workspace"**
 
-BB's native Git tool window follows the user-pinned IntelliJ IDEA Git Log reference: a branch browser, an actual parent graph and a revision inspector. The dense, flat workspace inherits BB's theme and font, using restrained blue selection and small colored graph lanes to organize repository history. Log, Changes and Checks are separate tabs. Checks extends this tool window with a compact workflow-run browser and diagnostics pane; Account remains accessible through the toolbar gear.
+BB's native Git tool window follows the user-pinned IntelliJ IDEA Git Log reference: a branch browser, an actual parent graph and a revision inspector. The dense, flat workspace inherits BB's theme and font, using restrained blue selection and small colored graph lanes to organize repository history. Log, Changes and Checks are separate tabs. Checks extends this tool window with a compact workflow-run browser and diagnostics pane; Account and remote selection live in the repository overflow menu.
 
 **Key Characteristics:**
 
@@ -89,11 +89,11 @@ The host font is inherited throughout this utility interface. The compact body i
 
 ## Layout
 
-Project and checkout selectors, a wrapping network toolbar and the Log / Changes / Checks tab strip precede the workspace. The desktop Log grid is `minmax(190px, 21%) minmax(280px, 1fr) minmax(220px, 26%)`: branch browser left, graph log middle, changed files and commit details right. Each pane scrolls independently. The branch-pane toggle gives the log more room. Selecting a revision file opens the host Diff renderer in a lower panel (42% height, minimum 180px).
+A single compact toolbar combines the project selector, current branch, upstream and sync controls; the Log / Changes / Checks tab strip is the second row. The desktop Log grid is `minmax(190px, 21%) minmax(280px, 1fr) minmax(220px, 26%)`: branch browser left, graph log middle, a compact commit summary above changed files right. Each pane scrolls independently. The branch-pane toggle gives the log more room. Selecting a revision file replaces the history workspace with files left and the host Diff renderer right, using its full height. A back button names the selected commit. File search and List/Tree state persist between modes.
 
-Log responsiveness follows the tool window's container width. At (1050px), pane widths tighten and author columns disappear. At (780px), branches occupy a (190px) left column and the revision inspector moves below the log; inspector files and details sit side by side. At (520px), the branch column narrows to (160px), branch-row actions sit below the full-width name, date columns and reference badges hide, and inspector files and details stack. The branch toggle remains available.
+Log responsiveness follows the tool window’s container width. At (1050px), pane widths tighten and author columns disappear. At (780px), branches occupy a (160px) left column and the revision inspector moves below the log; summary and files remain vertically arranged. At (520px), the branch column narrows to (140px) and date columns hide. Search and branch filtering stay available. The toolbar wraps the project selector into its own row below (780px). The diff keeps files and content side by side, with a (135px) file column below (520px).
 
-Changes retains its own files/commit and Diff split: `minmax(230px, 30%) minmax(0, 1fr)`. Viewport media queries tighten that split at (760px) and stack it at (520px). Account content scrolls and caps at (650px). Compact spacing repeats around controls and dividers; log rows are (32px) high.
+Changes retains its own files/commit and Diff split: `minmax(230px, 30%) minmax(0, 1fr)`. Nonempty Changes and Stage groups share the available height and scroll independently; empty groups stay compact, with the commit form anchored below. Viewport media queries tighten that split at (760px) and stack it at (520px). Account content scrolls and caps at (650px). Compact spacing repeats around controls and dividers; log rows are (46px) high to accommodate references below subjects.
 
 Branch-action and credential dialogs share a centered native modal, capped at (460px), with (16px) viewport margins and internal scrolling. Toolbar and dialog actions wrap.
 
@@ -115,13 +115,13 @@ Native compact buttons use host colors, hover treatment and disabled opacity (0.
 
 ### Navigation and branch browser
 
-The top-level tab strip uses an active blue underline, explicit labels and arrow/Home/End keyboard navigation. The branch tree groups favorites, local branches and remotes; selected rows receive a soft blue fill. Branch rows reveal compact create, safe local delete and overflow buttons on hover, keyboard focus or selection. On narrow panels these actions sit below the name to keep it readable. Favorites use a gold branch symbol and are toggled in the row menu. Row menus use native top-layer popovers, support arrow/Home/End navigation and Escape, and close on outside click or branch-list scroll. They do not clip inside the branch pane. The duplicate action strip above the log appears only while the branch pane is hidden. Branch controls use authored SVG shapes and accessible button labels.
+The top-level tab strip uses an active blue underline, explicit labels, 10px horizontal hover padding and arrow/Home/End keyboard navigation. The branch tree groups favorites, local branches and remotes; selected rows receive a soft blue fill. Branch rows reveal create (+) and overflow buttons on hover, keyboard focus or selection. Safe delete, checkout and other actions live in that menu. Current branches alone receive an accent icon; other branch and favorite icons remain neutral. Remote groups start collapsed and open when searching. Row menus use native top-layer popovers, support arrow/Home/End navigation and Escape, and close on outside click or branch-list scroll. They do not clip inside the branch pane. The duplicate action strip above the log appears only while the branch pane is hidden. Branch controls use authored SVG shapes and accessible button labels.
 
 **The Browse Before Checkout Rule.** Selecting a branch changes the history being browsed; checkout remains a separately labeled action.
 
 ### Graph log and revision inspector
 
-Commit rows align subject/graph, author and date in a dense grid. Small bordered reference badges accompany subjects on wider panels. Actual parent hashes determine lane connections, spaced (16px) apart; selected rows use a restrained blue fill. Revision files show status, filename and secondary path, followed by commit message, author, hash and metadata. The host Diff renderer serves revision and working-copy inspection.
+Commit rows align subject/graph, author and date in a dense grid. Subjects lead each row; neutral branch references occupy a secondary line. Actual parent hashes determine lane connections, spaced (16px) apart; selected rows use a restrained blue fill. A compact commit summary leads the inspector, with hash, author, date and parent. Subjects clamp to two lines with a full-text tooltip; full messages open from the overflow menu; branch creation and Copy hash live in its overflow menu. Files occupy the remaining space, with search and a bordered List/Tree segment; Tree is the default and the choice persists; rows show status, filename and secondary path. The host Diff renderer serves revision and working-copy inspection.
 
 **The Parent Graph Rule.** Draw graph connections from commit parent hashes; when text filtering hides intervening commits, show dots without connecting lines.
 
@@ -136,18 +136,29 @@ Fix it prepares a reviewable request. In a matching thread, the user can add it 
 Changes keeps manual index commits and adds a full-width secondary **Generate &
 Commit All** button below the commit footer. Its label states the all-files scope;
 the tooltip explains new and unstaged files. BB supplies generation and commit
-behavior. Controls disable while it runs, a bottom status shows progress, and
+behavior. Controls disable while it runs, a temporary notification shows progress, and
 success exposes the generated subject and hash. Unsupported checkouts show a
 disabled button with guidance to select a checkout associated with a BB chat.
 
-Changes file rows include a muted undo icon, always available with an accessible
-label and tooltip. Stage/Unstage and selected-file Discard share a compact action
-row. Discard uses the same native modal: Cancel receives initial focus, the exact
-file list shows Restore/Delete, and text explains whether staged edits are kept
-or rolled back. New-file deletion is explicit; destructive confirmation uses the
-host error text color. Long paths wrap and the list scrolls within the modal.
+Changes file rows lead with filename and a secondary directory. A visible + stages
+an unstaged file; − unstages an indexed file. Checkboxes appear only in the
+explicit Select files mode, labeled as bulk selection. Discard lives in row and
+bulk overflow menus. Empty Staged says No staged changes and stays compact; the
+composer stays below the independently scrolling groups.
 
-Branch actions and Git/SSH prompts share native modal styling and explicit labels. New branch offers HEAD and grouped local/remote sources; opening from a row preselects that branch, while opening from a commit preserves its revision. Delete confirmation focuses Cancel and uses Git's merged-history check; checked-out branches are protected. Credential prompts use password inputs where required. Operation output stays in a compact bottom strip; merge recovery uses a muted amber banner and labeled actions.
+Working diff headings explicitly label Working tree vs Index or Index vs HEAD.
+Each supported text hunk uses the host Diff renderer with a compact Stage hunk /
+Unstage hunk action. Select lines switches that hunk to a unified checkbox view
+with an explicit apply-selection button. Selection is separate from Git status.
+The host rebuilds patches from the fresh diff and selected line IDs, rejecting
+stale views; it applies patches only to the index.
+
+Discard retains its native modal: Cancel receives initial focus, single-file
+confirmation names the file, and the exact list shows Restore/Delete. Copy
+explains whether staged edits are kept or rolled back. New-file deletion is
+explicit; long paths wrap and the list scrolls within the modal.
+
+Branch actions and Git/SSH prompts share native modal styling and explicit labels. New branch offers HEAD and grouped local/remote sources; opening from a row preselects that branch, while opening from a commit preserves its revision. Delete confirmation focuses Cancel and uses Git's merged-history check; checked-out branches are protected. Credential prompts use password inputs where required. Success notifications overlay the workspace and disappear after five seconds; failures persist until dismissed. Full output for the latest operation opens only on request from the repository overflow menu; merge recovery uses a muted amber banner and labeled actions.
 
 ## Do's and Don'ts
 
@@ -166,8 +177,9 @@ Branch actions and Git/SSH prompts share native modal styling and explicit label
 
 ## Compact toolbar
 
-Fetch, Pull, Push and refresh use the shared 15px SVG family in 30px buttons,
-with native tooltips and accessible names. A divider separates the Account/SSH
-gear; its pressed state marks the settings view. Log, Changes and Checks remain
-in the tab strip. At narrow widths the upstream text hides; full tracking
-information remains in the branch browser footer.
+The project selector, the current branch and upstream status share one
+row with incoming/outgoing counts and Fetch, Pull, Push, Refresh and overflow.
+Checkout and remote selection and Account/SSH live in the overflow menu. Missing upstream is
+an explicit Set upstream action whose tooltip explains that it pushes the branch.
+Log, Changes and Checks remain directly beneath the toolbar. Context selectors
+wrap on narrow panels; the upstream action remains accessible.

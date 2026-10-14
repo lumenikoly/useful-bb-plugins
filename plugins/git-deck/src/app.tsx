@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from "react";
-import { definePluginApp, experimental_Diff as Diff, experimental_Icon as Icon, useBbContext, useRpc, type PluginThreadPanelProps, type PluginNewThreadPanelProps } from "@get-bb/plugin-sdk/app";
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode, type FormEvent } from "react";
+import { definePluginApp, experimental_Icon as Icon, useBbContext, useRpc, type PluginThreadPanelProps, type PluginNewThreadPanelProps } from "@get-bb/plugin-sdk/app";
 import type { Action, Change, Job, Snapshot, Target, rpcContract } from "./contracts.ts";
 import "./app.css";
-import { GitLog, Glyph } from "./log.tsx";
+import { GitLog, Glyph, ActionsMenu } from "./log.tsx";
+import { PartialDiff } from "./partial-ui.tsx";
 import { FixChatSetup, GithubAccount, GithubChecks } from "./github-ui.tsx";
 
 type Rpc = ReturnType<typeof useRpc<typeof rpcContract>>;
@@ -52,31 +53,33 @@ function GitPage({ threadId: panelThreadId, projectId: panelProjectId }: { threa
     return () => { current = false; };
   }, [rpc, projectId, threadId, revision]);
   const target = targets.find((t) => t.id === targetId);
-  return <div className="git-page">
-    <div className="git-context">
-      <Icon name="GitBranch" className="git-icon" /><strong>Git Deck</strong>
+  const contextControls = <div className="git-context">
       <select aria-label="Project" value={projectId} disabled={busy} onChange={(e) => setProjectId(e.target.value)}>
         {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
       </select>
-      <select aria-label="Checkout" value={targetId} disabled={busy || !targets.length} onChange={(e) => { setTargetId(e.target.value); save(`bb-git-deck-target:${projectId}`, e.target.value); }}>
+
+    </div>;
+  const checkoutControls = <select aria-label="Checkout" value={targetId} disabled={busy || !targets.length} onChange={(e) => { setTargetId(e.target.value); save(`bb-git-deck-target:${projectId}`, e.target.value); }}>
         {targets.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
-      </select>
-    </div>
+      </select>;
+  return <div className="git-page">
     {error && <div className="git-error" role="alert">{error} <button onClick={() => setRevision((v) => v + 1)}>Retry</button></div>}
-    {target ? <Repository key={`${projectId}:${target.id}`} rpc={rpc} target={target} threadId={threadId} onBusy={setBusy} />
-      : <div className="git-empty" role="status">{loading ? "Loading checkout…" : projects.length ? "This project has no available Git checkout. Add a repository path in project settings." : "Add a Git project to BB to get started."}</div>}
+    {target ? <Repository key={`${projectId}:${target.id}`} rpc={rpc} target={target} threadId={threadId} onBusy={setBusy} contextControls={contextControls} checkoutControls={checkoutControls} />
+      : <>{contextControls}{checkoutControls}<div className="git-empty" role="status">{loading ? "Loading checkout…" : projects.length ? "This project has no available Git checkout. Add a repository path in project settings." : "Add a Git project to BB to get started."}</div></>}
   </div>;
 }
 
-function Repository({ rpc, target, threadId, onBusy }: { rpc: Rpc; target: Target; threadId?: string; onBusy: (busy: boolean) => void }) {
+function Repository({ rpc, target, threadId, onBusy, contextControls, checkoutControls }: { rpc: Rpc; target: Target; threadId?: string; onBusy: (busy: boolean) => void; contextControls: ReactNode; checkoutControls: ReactNode }) {
   const input = { projectId: target.projectId, targetId: target.id };
   const [data, setData] = useState<Snapshot | null>(null);
   const [error, setError] = useState("");
   const [starting, setStarting] = useState(false);
   const [autoCommitting, setAutoCommitting] = useState(false);
   const [job, setJob] = useState<Job | null>(null);
+  const [notice, setNotice] = useState(false), [showOutput, setShowOutput] = useState(false);
   const [remote, setRemote] = useState("");
   const [message, setMessage] = useState("");
+  const [bulk, setBulk] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [discard, setDiscard] = useState<{ changes: Change[]; staged: boolean } | null>(null);
   const [file, setFile] = useState<{ path: string; staged: boolean } | null>(null);
@@ -89,6 +92,13 @@ function Repository({ rpc, target, threadId, onBusy }: { rpc: Rpc; target: Targe
   const messageId = useId();
   const panelId = useId();
   const busy = starting || autoCommitting || job?.state === "running";
+  useEffect(() => {
+    if (!job) return;
+    setNotice(true);
+    if (job.state !== "done") return;
+    const timer = setTimeout(() => setNotice(false), 5000);
+    return () => clearTimeout(timer);
+  }, [job?.id, job?.state]);
   useEffect(() => { onBusy(busy); return () => onBusy(false); }, [busy, onBusy]);
   useEffect(() => { alive.current = true; return () => { alive.current = false; request.current++; }; }, []);
   const refresh = useCallback(async () => {
@@ -183,44 +193,51 @@ function Repository({ rpc, target, threadId, onBusy }: { rpc: Rpc; target: Targe
   }
   const toggle = (key: string) => setSelected((previous) => { const next = new Set(previous); if (next.has(key)) next.delete(key); else next.add(key); return next; });
   const showFile = (path: string, isStaged: boolean) => { setFile({ path, staged: isStaged }); setTab("diff"); };
-  if (!data) return <div className="git-empty" role="status">{error ? <><p className="git-error" role="alert">{error}</p><button onClick={() => { setError(""); void refresh(); }}>Retry</button></> : "Loading Git status…"}</div>;
+  if (!data) return <>{contextControls}{checkoutControls}<div className="git-empty" role="status">{error ? <><p className="git-error" role="alert">{error}</p><button onClick={() => { setError(""); void refresh(); }}>Retry</button></> : "Loading Git status…"}</div></>;
   const index = data.changes.filter((c) => staged(c) && !c.conflict);
   const working = data.changes.filter((c) => unstaged(c) && !c.conflict);
   const conflicts = data.changes.filter((c) => c.conflict);
   const group = (title: string, changes: Change[], isStaged: boolean) => {
     const key = isStaged ? "index:" : "worktree:";
     const paths = changes.filter((c) => selected.has(key + c.path)).map((c) => c.path);
-    return <section className="git-file-group">
-      <div className="git-group-heading"><strong>{title} <span>{changes.length}</span></strong>
-        <button disabled={busy || !changes.length} onClick={() => setSelected((previous) => {
-          const next = new Set(previous), all = changes.every((c) => next.has(key + c.path));
-          for (const c of changes) { if (all) next.delete(key + c.path); else next.add(key + c.path); }
-          return next;
-        })}>{changes.length && paths.length === changes.length ? "Deselect all" : "Select all"}</button>
-      </div>
+    return <section className="git-file-group" data-empty={!changes.length}>
+      <div className="git-group-heading"><strong>{title} <span>{changes.length}</span></strong>{!!changes.length && <button aria-pressed={bulk} onClick={() => { setBulk(!bulk); setSelected(new Set()); }}>{bulk ? "Done selecting" : "Select files"}</button>}</div>
+      {bulk && !!changes.length && <div className="git-bulk-heading"><span>Bulk selection</span><button disabled={busy} onClick={() => setSelected((previous) => {
+        const next = new Set(previous), all = changes.every((c) => next.has(key + c.path));
+        for (const c of changes) { if (all) next.delete(key + c.path); else next.add(key + c.path); }
+        return next;
+      })}>{paths.length === changes.length ? "Deselect all" : "Select all"}</button></div>}
       {changes.length ? <ul>{changes.map((c) => <li key={c.path} data-selected={file?.path === c.path && file.staged === isStaged}>
-        <input type="checkbox" aria-label={`Select ${c.path} (${title})`} checked={selected.has(key + c.path)} disabled={busy} onChange={() => toggle(key + c.path)} />
+        {bulk && <input type="checkbox" aria-label={`Select ${c.path} for bulk operations (${title})`} checked={selected.has(key + c.path)} disabled={busy} onChange={() => toggle(key + c.path)} />}
         <button className="git-file" onClick={() => showFile(c.path, isStaged)} title={c.original ? `${c.original} → ${c.path}` : c.path}>
-          <span className="git-file-status" title={statusText(c)}>{c.index === "?" ? "?" : isStaged ? c.index : c.worktree}</span><span>{c.path}</span>
+          <span className="git-file-status" title={statusText(c)}>{c.index === "?" ? "A" : isStaged ? c.index : c.worktree}</span><span>{c.path.split("/").pop()}<small>{c.path.includes("/") ? c.path.slice(0, c.path.lastIndexOf("/")) : ""}</small></span>
         </button>
-        <button className="git-file-discard" aria-label={`Discard ${c.path} (${title})`} title={isStaged ? "Discard staged and unstaged changes" : c.index === "?" ? "Delete new file" : "Discard unstaged changes"} disabled={busy} onClick={() => setDiscard({ changes: [c], staged: isStaged })}><Glyph name="undo" /></button>
-      </li>)}</ul> : <p className="git-muted">{isStaged ? "Stage files to include them in the commit." : "Working directory is clean."}</p>}
-      {!!changes.length && <div className="git-group-actions"><button disabled={busy || !paths.length} onClick={() => void start({ kind: isStaged ? "unstage" : "stage", paths })}>
-        {isStaged ? "Unstage" : "Stage"}{paths.length ? ` · ${paths.length}` : ""}
-      </button><button disabled={busy || !paths.length} onClick={() => setDiscard({ changes: changes.filter((c) => selected.has(key + c.path)), staged: isStaged })}>Discard{paths.length ? ` · ${paths.length}` : ""}</button></div>}
+        <button className="git-file-stage" aria-label={`${isStaged ? "Unstage" : "Stage"} ${c.path}`} title={isStaged ? "Unstage file" : "Stage file"} disabled={busy} onClick={() => void start({ kind: isStaged ? "unstage" : "stage", paths: [c.path] })}><Glyph name={isStaged ? "minus" : "plus"} /></button>
+        <ActionsMenu label={`File actions for ${c.path} (${title})`} actions={[
+          { label: "Copy path", run: () => { void navigator.clipboard.writeText(c.path).catch((e) => setError(errorText(e))); } },
+          { label: "Discard changes…", disabled: busy, run: () => setDiscard({ changes: [c], staged: isStaged }) },
+        ]} />
+      </li>)}</ul> : <p className="git-muted">{isStaged ? "No staged changes" : "Working directory is clean."}</p>}
+      {bulk && !!changes.length && <div className="git-group-actions"><button disabled={busy || !paths.length} onClick={() => void start({ kind: isStaged ? "unstage" : "stage", paths })}>{isStaged ? "Unstage selected" : "Stage selected"}{paths.length ? ` · ${paths.length}` : ""}</button><ActionsMenu label={`Bulk actions (${title})`} actions={[{ label: "Discard selected changes…", disabled: busy || !paths.length, run: () => setDiscard({ changes: changes.filter((c) => selected.has(key + c.path)), staged: isStaged }) }]} /></div>}
     </section>;
   };
   return <>
     <div className="git-toolbar">
-      <span className="git-current-branch"><Icon name="GitBranch" className="git-icon" /><strong>{data.branch}</strong></span>
-      <span className="git-tracking" title={data.upstream || "No upstream"}>{data.upstream || "No upstream"}{data.upstream ? ` · ↑${data.ahead} ↓${data.behind}` : ""}</span>
-      <select aria-label="Remote for Fetch and Push" value={remote} disabled={busy || !data.remotes.length} onChange={(e) => setRemote(e.target.value)}>{data.remotes.map((r) => <option key={r.name}>{r.name}</option>)}</select>
-      <button className="git-icon-button" aria-label="Fetch" title="Fetch — get changes from remote" disabled={busy || !remote} onClick={() => void start({ kind: "fetch", remote })}><Glyph name="fetch" /></button>
+      {contextControls}
+      <span className="git-current-branch"><Glyph name="branch" /><strong>{data.branch}</strong></span>
+      {data.upstream ? <span className="git-tracking" title={data.upstream}>{data.upstream}</span> : <button className="git-tracking git-upstream-action" disabled={busy || !remote || data.unborn} title={`Push to ${remote || "remote"} and set upstream`} onClick={() => void start({ kind: "push", remote })}>Set upstream</button>}
+      <span className="git-sync-counts" title="Incoming / outgoing commits">↓{data.behind} ↑{data.ahead}</span>
+      <button className="git-icon-button" aria-label="Fetch" title={`Fetch from ${remote || "remote"}`} disabled={busy || !remote} onClick={() => void start({ kind: "fetch", remote })}><Glyph name="fetch" /></button>
       <button className="git-icon-button" aria-label="Pull" disabled={busy || !data.upstream} title="Pull — update current branch (fast-forward)" onClick={() => void start({ kind: "pull" })}><Glyph name="pull" /></button>
-      <button className="git-icon-button" aria-label="Push" title="Push — push current branch" disabled={busy || !remote || data.unborn} onClick={() => void start({ kind: "push", remote })}><Glyph name="push" /></button>
+      <button className="git-icon-button" aria-label="Push" title={`Push to ${remote || "remote"}`} disabled={busy || !remote || data.unborn} onClick={() => void start({ kind: "push", remote })}><Glyph name="push" /></button>
       <button className="git-icon-button" aria-label="Refresh Git status" title="Refresh Git status" onClick={() => { setError(""); void refresh(); }}><Glyph name="refresh" /></button>
-      <span className="git-toolbar-divider" aria-hidden="true" />
-      <button className="git-icon-button git-settings-button" aria-label="Account and SSH" title="Account and SSH" aria-pressed={tab === "account"} onClick={() => setTab((current) => current === "account" ? "history" : "account")}><Glyph name="settings" /></button>
+      <ActionsMenu label="Repository actions" actions={[
+        { label: "Account and SSH", run: () => setTab("account") },
+        { label: "Activity / Git output", disabled: !job, run: () => setShowOutput(true) },
+      ]}>
+        <label className="git-menu-field">Checkout{checkoutControls}</label>
+        <label className="git-menu-field">Remote<select aria-label="Remote for Fetch and Push" value={remote} disabled={busy || !data.remotes.length} onChange={(e) => setRemote(e.target.value)}>{data.remotes.map((r) => <option key={r.name}>{r.name}</option>)}</select></label>
+      </ActionsMenu>
     </div>
     {error && <p role="alert" className="git-error">{error}<button aria-label="Dismiss error" onClick={() => setError("")}>Close</button></p>}
         <div className="git-tabs" role="tablist" aria-label="Git views">{(["history", "diff", "checks"] as const).map((id, i, tabs) => <button key={id} id={`${panelId}-${id}`} role="tab" tabIndex={tab === id || tab === "account" && id === "history" ? 0 : -1} aria-selected={tab === id} onClick={() => setTab(id)} onKeyDown={(e) => {
@@ -237,7 +254,7 @@ function Repository({ rpc, target, threadId, onBusy }: { rpc: Rpc; target: Targe
       <aside className="git-changes">
         <div className="git-file-lists">
           {!!conflicts.length && <section className="git-conflicts"><strong>Resolve conflicts · {conflicts.length}</strong><p>Resolve the files, then stage them.</p>{conflicts.map((c) => <div key={c.path}><button className="git-file" onClick={() => showFile(c.path, false)}>{c.path}</button><button disabled={busy} onClick={() => void start({ kind: "stage", paths: [c.path] })}>Stage</button></div>)}</section>}
-          {group("Changes", working, false)}{group("Stage", index, true)}
+          {group("Changes", working, false)}{group("Staged", index, true)}
         </div>
         <form className="git-commit" onSubmit={(e) => { e.preventDefault(); void start({ kind: "commit", message }); }}>
           <label htmlFor={messageId}>Commit message</label>
@@ -248,15 +265,16 @@ function Repository({ rpc, target, threadId, onBusy }: { rpc: Rpc; target: Targe
       </aside>
       <main className="git-inspector">
         <div className="git-inspector-content">
-          {tab === "diff" && (file ? <><div className="git-diff-heading"><span title={file.path}>{file.path} <small>{file.staged ? "stage" : "working tree"}</small></span><button aria-pressed={diffView === "split"} onClick={() => setDiffView((v) => v === "split" ? "unified" : "split")}>{diffView === "split" ? "Side by side" : "Unified"}</button></div>
-            {diffError ? <p className="git-error" role="alert">{diffError}</p> : patch === null ? <p className="git-empty">Loading diff…</p> : patch ? <Diff patch={patch} path={file.path} view={diffView} /> : <p className="git-empty">No text changes.</p>}
+          {tab === "diff" && (file ? <><div className="git-diff-heading"><span className="git-working-diff-title" title={file.path}>{file.path}<small>{file.staged ? "Index vs HEAD" : "Working tree vs Index"}</small></span><button aria-pressed={diffView === "split"} onClick={() => setDiffView((v) => v === "split" ? "unified" : "split")}>{diffView === "split" ? "Side by side" : "Unified"}</button></div>
+            {diffError ? <p className="git-error" role="alert">{diffError}</p> : patch === null ? <p className="git-empty">Loading diff…</p> : patch ? <PartialDiff patch={patch} path={file.path} staged={file.staged} view={diffView} busy={busy} canPartial={!data.changes.find((c) => c.path === file.path)?.original && !data.changes.find((c) => c.path === file.path)?.conflict} start={start} /> : <p className="git-empty">No text changes.</p>}
           </> : <div className="git-empty"><Icon name="FileDiff" className="git-empty-icon" /><p>Select a file to view its changes.</p></div>)}
 
         </div>
       </main>
     </div>
-    {autoCommitting && <div className="git-operation" role="status">Generating a message and committing all changes…</div>}
-    {job && <div className="git-operation" aria-live="polite"><div><strong>{job.state === "running" ? `${job.kind}: ${job.prompt ? "waiting for input" : "running…"}` : job.state === "done" ? `${job.kind}: done` : job.state === "cancelled" ? "Operation cancelled" : `${job.kind}: failed`}</strong>{job.state === "running" ? <button onClick={() => void cancel()}>Cancel</button> : <button onClick={() => setJob(null)}>Close</button>}</div>{job.output && <pre>{job.output}</pre>}</div>}
+    {autoCommitting && <div className="git-notice" role="status">Generating a message and committing all changes…</div>}
+    {job && notice && <div className="git-notice" data-state={job.state} role={job.state === "failed" ? "alert" : "status"}><span>{job.state === "running" ? `${job.kind}: ${job.prompt ? "waiting for input" : "running…"}` : job.state === "done" ? `${job.kind === "branch-create" ? "Branch created" : job.kind + ": done"}${job.kind === "branch-create" ? `: ${data.branch}` : ""}` : job.state === "cancelled" ? "Operation cancelled" : `${job.kind}: failed`}</span><button onClick={() => setShowOutput(true)}>Details</button>{job.state === "running" ? <button onClick={() => void cancel()}>Cancel</button> : <button aria-label="Dismiss notification" onClick={() => setNotice(false)}><Glyph name="close" /></button>}</div>}
+    {showOutput && job && <OperationOutput job={job} close={() => setShowOutput(false)} />}
     {job?.prompt && <Credential key={job.prompt.id} job={job} answer={async (value) => { await rpc.call("answer", { ...input, jobId: job.id, promptId: job.prompt!.id, value }); }} cancel={cancel} />}
     {discard && <DiscardDialog changes={discard.changes} staged={discard.staged} unborn={data.unborn} cancel={() => setDiscard(null)} confirm={() => {
       setDiscard(null);
@@ -293,13 +311,19 @@ function Account({ data, busy, start, rpc, target, githubRemote }: { data: Snaps
   </div>;
 }
 
+function OperationOutput({ job, close }: { job: Job; close: () => void }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => { const element = dialog.current!; element.showModal(); return () => element.close(); }, []);
+  return <dialog ref={dialog} className="git-credential git-output-dialog" aria-label="Activity / Git output" onCancel={close}><h2>Activity / Git output</h2><p>{job.kind}: {job.state}</p><pre>{job.output || "No output yet."}</pre><div className="git-credential-actions"><button autoFocus onClick={close}>Close</button></div></dialog>;
+}
+
 function DiscardDialog({ changes, staged, unborn, cancel, confirm }: { changes: Change[]; staged: boolean; unborn: boolean; cancel: () => void; confirm: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null), id = useId();
   const isNew = (c: Change) => c.index === "?" || (staged && ["A", "C"].includes(c.index)) || (!staged && c.index === " " && c.worktree === "A");
   const allNew = changes.every(isNew);
   useEffect(() => { const element = dialog.current!; element.showModal(); return () => element.close(); }, []);
   return <dialog ref={dialog} className="git-credential git-discard-dialog" aria-labelledby={`${id}-title`} aria-describedby={`${id}-description`} onCancel={(e) => { e.preventDefault(); cancel(); }}>
-    <h2 id={`${id}-title`}>{allNew ? "Delete new files?" : "Discard changes?"}</h2>
+    <h2 id={`${id}-title`}>{allNew ? "Delete new files?" : changes.length === 1 ? `Discard uncommitted changes in ${changes[0].path.split("/").pop()}?` : "Discard changes?"}</h2>
     <p id={`${id}-description`} className="git-muted">{allNew ? staged ? "These new files will be deleted from disk and removed from the stage." : "These new files will be deleted from disk." : staged ? unborn ? "These files will be deleted from disk and the stage." : "Restore these files to the last commit, including their staged and unstaged changes." : "Discard unstaged edits. Staged changes will be kept."} This cannot be undone.</p>
     <ul className="git-discard-files">{changes.map((c) => <li key={c.path}><span>{c.original && staged && c.index === "R" ? `${c.path} → ${c.original}` : c.path}</span><small>{isNew(c) ? "Delete" : "Restore"}</small></li>)}</ul>
     {!allNew && changes.some(isNew) && <p className="git-muted">Files marked Delete will be deleted from disk.</p>}

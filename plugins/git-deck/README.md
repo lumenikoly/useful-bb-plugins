@@ -36,15 +36,15 @@ Package: `bb-plugin-git-deck`. Plugin ID: `git-deck`. Releases use the
 
 ## Branches and history
 
-**Log** opens first. Browse HEAD, local and remote branches, search branch names
+**Log** opens first. Browse local and remote branches, search branch names
 and star favorites. Selecting a branch filters its history; **Checkout** is an
 explicit action.
 
-- Use the row's **+** to create a branch from it, or choose HEAD, a local branch,
+- Use **Branches +**, the row’s **+**, or **… → Create branch from here**; choose HEAD, a local branch,
   or a remote branch in **New branch → Create from**. A selected commit is also
   available when opening the dialog from commit details.
 - Check out a remote branch by creating a local tracking branch.
-- Delete a local branch using the row's trash button and confirmation dialog.
+- Delete a local branch using its **…** menu and confirmation dialog.
   Git protects unmerged commits; current branches and branches checked out in
   another worktree cannot be deleted. The row's **…** menu includes Checkout,
   Rename, Merge, Compare and Favorites.
@@ -57,21 +57,49 @@ merge**, or use **Abort merge**.
 
 The graph follows actual commit parents. Squash and rebase merges do not create
 a merge edge. History loads 100 commits at a time, up to 1,000. Message, author
-and hash search covers loaded history; graph lines are hidden while searching
+and hash search, plus the Author filter, cover loaded history; graph lines are hidden while filtering
 so omitted commits cannot create false connections. A merge commit's file diff
 compares it with its first parent. On narrow panels, revision details move below
-the log; the pane icon hides the branch browser.
+the log; the pane icon hides the branch browser. Commit subjects lead each row,
+with branch references underneath. Remotes start collapsed.
+
+The commit summary appears above its files. Filter files by path (including the
+original path of renames), or use the **List / Tree** segmented control. **Tree**
+is the default; your choice is remembered across sessions. Subjects are capped
+at two lines with their full text in a tooltip.
+Selecting a file opens a full-height diff with the file list alongside it; use
+the back button to return to history. File filtering and the view mode carry
+across both views. **Commit …** holds View full message, Create branch and Copy hash.
+
+The compact toolbar combines project, current branch and sync controls.
+Choose the checkout, remote and Account/SSH under **Repository …**. **Set upstream** pushes
+the current branch to the selected remote and establishes tracking. Successful
+operation notifications disappear after five seconds; failures remain until
+dismissed. The latest operation’s full output stays available under
+**Repository … → Activity / Git output**.
 
 ## Changes, commits and sync
 
 Select a project and checkout; a thread panel starts with its own environment.
-Open **Changes**, select files and stage them. Unstaging preserves the working
-copy. Select a file to review a side-by-side or unified diff.
+Open **Changes** and use a file’s **+** to stage it. **Staged** shows the index;
+its **−** removes a file from the index. Filenames lead each row, with their
+directory underneath. **Select files** enables checkboxes explicitly for bulk
+operations. Empty Staged stays compact and the commit composer stays below the
+scrolling file lists.
 
-Use the file row's undo icon or select files and choose **Discard**. A confirmation
+Select a file for a side-by-side or unified diff. Its heading states **Working
+tree vs Index** or **Index vs HEAD**. For regular text changes, each block offers
+**Stage hunk** or **Unstage hunk**. **Select lines** exposes a unified selection
+view; choose additions/deletions and apply only the selected lines. Partial
+operations update only the index, so a file can appear in both lists. The host
+checks the exact diff again before applying it; stale selections fail without
+applying a patch. Binary files, renames, conflicts, submodules and file-mode
+changes use whole-file staging.
+
+Use **File … → Discard changes…**, or the bulk-selection overflow menu. A confirmation
 lists exactly which files will be restored or deleted, with Cancel focused.
 In **Changes**, discard restores the working copy from the index and keeps staged
-edits. In **Stage**, it restores the selected files and index to the last commit,
+edits. In **Staged**, it restores the selected files and index to the last commit,
 including unstaged edits to those files. New files are deleted; in a repository
 without commits, discarding staged additions also deletes them. Renames restore
 the original path unless another changed file occupies it. Unselected files are
@@ -90,7 +118,7 @@ selected checkout; main checkouts work when a BB chat uses that same path.
 The button is disabled during another operation or a merge. The generated
 subject and commit hash appear in the operation output after success.
 
-The toolbar provides Fetch, Pull, Push, Refresh and the **Account and SSH** gear.
+The toolbar provides Fetch, Pull, Push and Refresh. **Repository …** opens Account and SSH.
 Fetch uses the selected remote. Fetch and Pull prune stale remote-tracking
 branches using Git's standard `--prune` behavior. Pull is fast-forward-only and
 follows the current upstream. Push preserves an upstream destination on the selected remote; without

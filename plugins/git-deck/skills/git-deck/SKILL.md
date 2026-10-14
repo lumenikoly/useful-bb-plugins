@@ -15,8 +15,15 @@ to `bb: automated commit` if generation fails or AI is off. Only ready BB
 environments associated with the exact selected checkout can use this action.
 Do not use it when the checkout contains unrelated work.
 
-Discard requires confirmation. In Changes it restores selected tracked files
-from the index, preserving staged edits; in Stage it restores the selected index
+Changes uses + to stage files and Staged uses − to unstage them. Select files
+turns on checkboxes for bulk operations. Text diffs support Stage/Unstage hunk
+and Select lines. Partial operations apply only to the index after comparing
+the exact current diff with the displayed version; working files are preserved.
+Binary files, renames, conflicts, submodules and mode changes use whole-file
+staging. A partially staged file can appear in both Changes and Staged.
+
+Discard requires confirmation through the overflow menu. In Changes it restores selected tracked files
+from the index, preserving staged edits; in Staged it restores the selected index
 and working copy to HEAD. New files are deleted. Renames restore the original
 path unless it contains other changes. Submodules require opening their own
 checkout. Never discard unrelated work.

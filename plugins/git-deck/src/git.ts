@@ -2,15 +2,16 @@ import { spawn } from "node:child_process";
 import { lstat } from "node:fs/promises";
 import { join } from "node:path";
 import type { Action, Change, Snapshot, Branch, Commit, Inspection } from "./contracts.ts";
+import { selectedPatch } from "./partial.ts";
 
 export async function git(path: string, args: string[], options: {
-  signal?: AbortSignal; env?: NodeJS.ProcessEnv; allowed?: number[]; onOutput?: (s: string) => void;
+  signal?: AbortSignal; env?: NodeJS.ProcessEnv; allowed?: number[]; onOutput?: (s: string) => void; input?: string;
 } = {}) {
   options.signal?.throwIfAborted();
   return await new Promise<{ stdout: string; stderr: string; code: number }>((done, reject) => {
     const child = spawn("git", ["--no-pager", "--literal-pathspecs", "-c", "color.ui=false", "-C", path, ...args], {
       env: { ...process.env, GIT_TERMINAL_PROMPT: "0", ...options.env },
-      stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32",
+      stdio: ["pipe", "pipe", "pipe"], detached: process.platform !== "win32",
     });
     let stdout = "", stderr = "", bytes = 0, failure: Error | undefined;
     let killTimer: ReturnType<typeof setTimeout> | undefined;
@@ -39,6 +40,8 @@ export async function git(path: string, args: string[], options: {
     child.stderr.setEncoding("utf8").on("data", (s: string) => receive("stderr", s));
     const cleanup = () => { clearTimeout(timeout); if (killTimer) clearTimeout(killTimer); options.signal?.removeEventListener("abort", abort); };
     child.on("error", (error) => { cleanup(); reject(error); });
+    child.stdin?.on("error", (error) => { if ((error as NodeJS.ErrnoException).code !== "EPIPE") stop(error); });
+    child.stdin.end(options.input);
     child.on("close", (code) => {
       // A hook/SSH child may outlive its Git parent after cancellation.
       if (failure) kill("SIGKILL");
@@ -69,13 +72,16 @@ export function parseStatus(raw: string): Change[] {
 
 export async function snapshot(path: string, signal?: AbortSignal): Promise<Snapshot> {
   const root = await repository(path, signal);
-  const read = async (args: string[], allowed = [0]) => (await git(root, args, { signal, allowed })).stdout.replace(/\r?\n$/, "");
+  const read = async (args: string[], allowed = [0]) => {
+    const result = await git(root, args, { signal, allowed });
+    return result.code === 0 ? result.stdout.replace(/\r?\n$/, "") : "";
+  };
   const config = async (key: string, local = false) => read(["config", ...(local ? ["--local"] : []), "--get", key], [0, 1]);
-  const [status, branch, head, upstream, remoteNames, name, email, sshCommand, localName, localEmail, localSshCommand] = await Promise.all([
+  const [status, branch, head, upstreamRef, remoteNames, name, email, sshCommand, localName, localEmail, localSshCommand] = await Promise.all([
     read(["status", "--porcelain=v1", "-z", "--untracked-files=all"]),
     read(["symbolic-ref", "--quiet", "--short", "HEAD"], [0, 1]),
     read(["rev-parse", "--verify", "--quiet", "HEAD"], [0, 1]),
-    read(["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"], [0, 128]),
+    read(["rev-parse", "--verify", "--quiet", "--symbolic-full-name", "@{upstream}"], [0, 1, 128]),
     read(["remote"]),
     config("user.name"), config("user.email"), config("core.sshCommand"),
     config("user.name", true), config("user.email", true), config("core.sshCommand", true),
@@ -84,7 +90,8 @@ export async function snapshot(path: string, signal?: AbortSignal): Promise<Snap
     name: remote, url: await read(["remote", "get-url", "--", remote]), pushUrl: await read(["remote", "get-url", "--push", "--", remote]),
   })));
   let ahead = 0, behind = 0;
-  if (upstream && head) [ahead, behind] = (await read(["rev-list", "--left-right", "--count", "HEAD...@{upstream}"])).split(/\s+/).map(Number);
+  if (upstreamRef && head) [ahead, behind] = (await read(["rev-list", "--left-right", "--count", `${head}...${upstreamRef}`])).split(/\s+/).map(Number);
+  const upstream = upstreamRef.replace(/^refs\/(heads|remotes)\//, "");
   const refsRaw = await read(["for-each-ref", "--sort=refname", "--format=%(refname)%00%(objectname)%00%(HEAD)%00%(upstream:short)%00%(worktreepath)%00%(symref)", "refs/heads/", "refs/remotes/"]);
   const refs: Branch[] = refsRaw.split("\n").filter(Boolean).flatMap((line) => {
     const [ref, hash, current, upstream, worktree, symref] = line.split("\0");
@@ -114,7 +121,15 @@ export async function diff(path: string, pathspec: string, staged: boolean, sign
 
 export async function perform(path: string, action: Action, options: Parameters<typeof git>[2]) {
   const run = (args: string[], allowed?: number[]) => git(path, args, { ...options, allowed });
-  if (action.kind === "stage" || action.kind === "unstage") {
+  if (action.kind === "stage-part") {
+    const changes = parseStatus((await git(path, ["status", "--porcelain=v1", "-z", "--untracked-files=all"], { signal: options?.signal })).stdout);
+    const change = changes.find((c) => c.path === action.pathspec);
+    if (!change || change.conflict || change.original) throw new Error("Use whole-file staging for conflicts and renames.");
+    const fresh = await diff(path, action.pathspec, action.staged, options?.signal);
+    if (fresh.patch !== action.expectedPatch) throw new Error("The diff has changed. Refresh and select the changes again.");
+    const patch = selectedPatch(fresh.patch, action.lines, action.staged);
+    await git(path, ["apply", "--cached", "--recount", "--unidiff-zero", "--whitespace=nowarn", "-"], { ...options, input: patch });
+  } else if (action.kind === "stage" || action.kind === "unstage") {
     const status = parseStatus((await git(path, ["status", "--porcelain=v1", "-z", "--untracked-files=all"], { signal: options?.signal })).stdout);
     const paths = action.paths.flatMap((p) => {
       const change = status.find((c) => c.path === p);

@@ -300,3 +300,43 @@ test("branches: tracking and pruning, log topology, revision diffs, safe deletio
     assert.equal((await harness.experimental_call("snapshot", { path: repo })).refs.some((b) => b.name === "feature/work"), false);
   } finally { await harness.experimental_dispose(); await rm(dir, { recursive: true, force: true }); }
 });
+
+test("snapshot remains usable when the configured upstream ref is gone", async () => {
+  const repo = await mkdtemp(join(tmpdir(), "bb-git-deck-gone-upstream-"));
+  const harness = experimental_createHostEntryHarness(host);
+  try {
+    await init(repo);
+    await writeFile(join(repo, "file.txt"), "base\n");
+    await git(repo, ["add", "file.txt"]);
+    await git(repo, ["commit", "-m", "Base"]);
+    await git(repo, ["remote", "add", "origin", repo]);
+    await git(repo, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+    await git(repo, ["branch", "--set-upstream-to=origin/main", "main"]);
+    await writeFile(join(repo, "file.txt"), "local commit\n");
+    await git(repo, ["add", "file.txt"]);
+    await git(repo, ["commit", "-m", "Local commit"]);
+    // A similarly named local branch must not affect ahead/behind counts.
+    await git(repo, ["branch", "origin/main", "HEAD"]);
+    let state = await harness.experimental_call("snapshot", { path: repo });
+    assert.equal(state.upstream, "origin/main");
+    assert.equal(state.ahead, 1);
+    assert.equal(state.behind, 0);
+    await writeFile(join(repo, "file.txt"), "working edit\n");
+    await writeFile(join(repo, "staged.txt"), "staged edit\n");
+    await git(repo, ["add", "staged.txt"]);
+    const before = await harness.experimental_call("snapshot", { path: repo });
+    await git(repo, ["update-ref", "-d", "refs/remotes/origin/main"]);
+    state = await harness.experimental_call("snapshot", { path: repo });
+    assert.equal(state.branch, "main");
+    assert.equal(state.unborn, false);
+    assert.equal(state.upstream, "");
+    assert.equal(state.ahead, 0);
+    assert.equal(state.behind, 0);
+    assert.deepEqual(state.changes, before.changes);
+    assert.deepEqual(state.history, before.history);
+    assert.equal(state.refs.find((b) => b.current)?.upstream, before.refs.find((b) => b.current)?.upstream);
+  } finally {
+    await harness.experimental_dispose();
+    await rm(repo, { recursive: true, force: true });
+  }
+});
