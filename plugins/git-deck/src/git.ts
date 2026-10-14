@@ -4,6 +4,11 @@ import { join } from "node:path";
 import type { Action, Change, Snapshot, Branch, Commit, Inspection } from "./contracts.ts";
 import { selectedPatch } from "./partial.ts";
 
+export class GitCommandError extends Error {
+  readonly outputReported: boolean;
+  constructor(message: string, outputReported: boolean) { super(message); this.outputReported = outputReported; }
+}
+
 export async function git(path: string, args: string[], options: {
   signal?: AbortSignal; env?: NodeJS.ProcessEnv; allowed?: number[]; onOutput?: (s: string) => void; input?: string;
 } = {}) {
@@ -47,7 +52,7 @@ export async function git(path: string, args: string[], options: {
       if (failure) kill("SIGKILL");
       cleanup();
       if (failure) reject(failure);
-      else if (!(options.allowed ?? [0]).includes(code ?? -1)) reject(new Error(stderr.trim() || stdout.trim() || `Git exited with code ${code}.`));
+      else if (!(options.allowed ?? [0]).includes(code ?? -1)) reject(new GitCommandError(stderr.trim() || stdout.trim() || `Git exited with code ${code}.`, !!options.onOutput && !!(stderr.trim() || stdout.trim())));
       else done({ stdout, stderr, code: code ?? -1 });
     });
   });
@@ -206,7 +211,7 @@ export async function perform(path: string, action: Action, options: Parameters<
   } else if (action.kind === "branch-rename") {
     await run(["branch", "-m", "--", action.branch, action.name]);
   } else if (action.kind === "branch-delete") {
-    await run(["branch", "-d", "--", action.branch]);
+    await run(["branch", action.force ? "-D" : "-d", "--", action.branch]);
   } else if (action.kind === "merge") {
     const status = await git(path, ["status", "--porcelain=v1"], { signal: options?.signal });
     if (status.stdout) throw new Error("Commit your changes before merging. The working directory must be clean.");

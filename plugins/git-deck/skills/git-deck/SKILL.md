@@ -44,6 +44,14 @@ the upstream branch on
 the selected remote, or establishes upstream for the current branch. Cancellation
 does not roll back completed operations. Check Git status after a worker restart.
 
+Local branch deletion uses Git's safe merge check against upstream when it
+exists, otherwise HEAD. Squash-equivalent content is not proof of merged
+ancestry. After an unmerged-branch refusal, Force delete opens a separate
+confirmation before using `git branch -D`. Force still protects branches checked
+out in any worktree. It removes only the local branch reference; remote refs,
+working files and the index stay intact. Commits reachable only from the deleted
+branch may become unavailable. Do not force-delete without an explicit request.
+
 Linux/macOS are supported. Resolve conflicts in the editor, then stage and
 complete the merge, or abort it. Git handles hooks and signing; GPG/pinentry stay
 system-managed. Advanced operations belong in the Git terminal. The history

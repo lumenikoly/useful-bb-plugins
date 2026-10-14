@@ -46,8 +46,13 @@ explicit action.
   until Git finishes; failures remain in the dialog so you can correct the input.
 - Check out a remote branch by creating a local tracking branch.
 - Delete a local branch using its **…** menu and confirmation dialog.
-  Git protects unmerged commits; current branches and branches checked out in
-  another worktree cannot be deleted. The row's **…** menu includes Checkout,
+  Safe deletion checks Git commit ancestry against the available upstream, or
+  current HEAD if upstream is unavailable. Squash merges may still fail that
+  ancestry check. After an unmerged-branch refusal, **Force delete…** opens a
+  separate confirmation; **Delete branch anyway** bypasses the merge check.
+  Current branches and branches checked out in another worktree cannot be deleted,
+  even with force. Only the local branch reference is removed; working files,
+  the index and remote branches stay intact. The row's **…** menu includes Checkout,
   Rename, Merge, Compare and Favorites.
 - Merge the selected branch into the current branch; a clean checkout is required.
 - Compare branch tips with **Compare with HEAD** and inspect changed files.

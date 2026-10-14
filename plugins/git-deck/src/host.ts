@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { experimental_defineHostEntry } from "@get-bb/plugin-sdk";
 import { createAskpass } from "./askpass.ts";
 import { hostContract, type Job } from "./contracts.ts";
-import { diff, git, perform, repository, snapshot, log, inspect, revisionDiff } from "./git.ts";
+import { diff, git, perform, repository, snapshot, log, inspect, revisionDiff, GitCommandError } from "./git.ts";
 import { checks, setAccount, runDetail, failedLogs, fixPrompt } from "./github.ts";
 
 type GitJob = { view: Job; root: string; abort: AbortController; reply?: (value: string | null) => void; finished?: number };
@@ -69,7 +69,9 @@ export default experimental_defineHostEntry({
           if (!view.output) view.output = "Done.";
         } catch (error) {
           state = abort.signal.aborted ? "cancelled" : "failed";
-          view.output = (view.output + "\n" + (error instanceof Error ? error.message : String(error))).slice(-262144);
+          if (!(error instanceof GitCommandError && error.outputReported)) {
+            view.output = (view.output + "\n" + (error instanceof Error ? error.message : String(error))).slice(-262144);
+          }
         } finally {
           job.reply?.(null);
           try { await bridge?.dispose(); } catch {
